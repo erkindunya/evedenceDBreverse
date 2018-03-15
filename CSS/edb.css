@@ -1,0 +1,53 @@
+/* css for evidence database */
+
+
+/* styles to add kier font */
+body,.ms-core-pageTitle, .ms-core-pageTitle a, .ms-core-listMenu-verticalBox > .ms-core-listMenu-root > li > .ms-core-listMenu-item, .ms-core-listMenu-verticalBox > .ms-core-listMenu-root > li > .ms-core-listMenuEdit, .ms-core-listMenu-heading, .ms-tv-header,.ms-core-defaultFont, #pageStatusBar, .ms-status-msg, .js-callout-body, h2, h3, .ms-h2, .ms-h3, .ms-headerFont,.ms-webpart-titleText.ms-webpart-titleText, .ms-webpart-titleText > a
+{
+font-family: Arial,"Segoe UI","Segoe",Tahoma,Helvetica,sans-serif !important;
+}
+
+/* hide search bar at top right */
+#DeltaPlaceHolderSearchArea {
+display: none !important;
+}
+
+
+/* styles for refiners*/
+
+.ms-ref-refiner #Value
+{
+width: 350px;
+}
+.ms-webpart-chrome-title
+{
+background-color:#007B86;
+padding-left:2px;
+cursor: pointer;
+}
+
+.ms-webpart-titleText-withMenu, .ms-webpart-titleText > a, .ms-webpart-titleText.ms-webpart-titleText
+{
+color:#FFFFFF !important;
+}
+
+.ms-ref-refinername:link, .ms-ref-refinername:visited
+{
+width:360px;
+color:#DA242A;
+font-size:10pt;
+}
+
+.ms-ref-refiner #Container{
+padding-bottom:10px;
+font-size:10pt;
+}
+
+#OtherValue{
+display:none
+}
+.ui-dialog-titlebar-close{
+display:none !important;
+}
+
+/* end */

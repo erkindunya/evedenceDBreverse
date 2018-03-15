@@ -1,0 +1,541 @@
+﻿.accordion {
+    font-family: inherit !important;
+    font-size: inherit !important;
+    height: auto !important;
+}
+/*To Disable save buttons in all the List forms in the Ribbon */
+#Ribbon\.ListForm\.Edit\.Commit\.Publish-Large {
+    display: none !important;
+}
+
+/* Changing the disabled font color */
+input[type=password][disabled], input[type=text][disabled], input[type=file][disabled], textarea[disabled], select[disabled], .sp-peoplepicker-topLevelDisabled, .ms-inputBoxDisabled {
+    color: inherit !important;
+}
+
+
+.formContent {
+    width: 100%;
+}
+
+.formSection {
+    margin-bottom: 5px;
+    margin-top: 5px;
+}
+
+.displayContent {
+    width: 29.5%;
+    text-align: right;
+    float: left;
+    height: 25px;
+    padding-bottom:5px;
+}
+
+.inputContent {
+    width: 70%;
+    text-align: left;
+    float: right;
+    height: 25px;   
+    padding-bottom:5px;
+}
+
+.projectInfo .displayContent {
+    width: 29.5%;
+    text-align: right;
+    float: left;
+    height: 25px;
+}
+
+.projectInfo .inputContent {
+    width: 70%;
+    text-align: left;
+    float: right;
+    height: 25px;
+}
+
+.projectAuthor .inputTextBox, .teamInfo .inputTextBox, .evidenceBiteInfo .inputTextBox {
+    min-width: 240px !important;
+}
+.ImageLibLink .inputTextBox{
+    min-width: 90% !important;
+	height:30px;
+}
+
+.ImageLibLink .inputContent{
+    height: 80px !important;
+}
+
+.projectInfo .inputDDL, .projectAuthor .inputDDL, .evidenceBiteInfo .inputDDL {
+    min-width: 251px !important;
+}
+
+.projectInfo .inputTextBox {
+    min-width: 370px !important;
+}
+
+input.addMore {
+    min-width: 20px !important;
+    height: 20px !important;
+}
+
+
+.firstHeadingInput, .firstHeading {
+    width: 44%;
+    float: left;
+}
+
+.locationContent {
+    width: 25%;
+    float: left;
+}
+
+.locationValue {
+    width: 75%;
+    text-align: left;
+    float: right;
+}
+
+.formButtons {
+    clear: both;
+    padding-top:5px;
+}
+
+.textBoxHeading {
+    width: 40%;
+    float: left;
+}
+
+.chkBox1Heading, .chkBox2Heading {
+    width: 20%;
+    float: left;
+	text-align:center;
+}
+.Header{
+position: relative;
+left: -16px;
+}
+.twoBoxheading {
+    width: 50%;
+    float: left;
+}
+
+.checkBoxKIGroup {
+    width: 70%;
+    text-align: left;
+    float: right;
+    min-height: 140px !important;
+}
+
+.checkBoxKIGroupContent {
+    min-height: 140px !important;
+    width: 30%;
+    text-align: right;
+    float: left;
+}
+
+.checkBoxWDGroup {
+    width: 70% !important;
+    text-align: left;
+    float: right;
+    min-height: 270px !important;
+}
+
+.checkBoxWDGroupContent {
+    min-height: 270px !important;
+    width: 30% !important;
+    text-align: right;
+    float: left;
+}
+
+.peoplePickerButton {
+    padding: 0px !important;
+}
+
+.addMore {
+    clear: both;
+}
+
+.projectDesc .multilineTextArea {
+    min-height: 180px !important;
+    clear: right;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+.multilineTextArea {
+    min-height: 135px !important;
+    clear: right;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+.multiRadioBoxArea {
+    min-height: 40px !important;
+    clear: right;
+}
+
+.multiCheckBoxArea {
+    min-height: 40px !important;
+    min-height: 60px !important;
+    clear: right;
+}
+
+.secondTestimonals {
+    clear: both;
+}
+
+.thirdTestimonals {
+    clear: both;
+}
+.fourthTestimonals {
+    clear: both;
+}
+.fifthTestimonals {
+    clear: both;
+}
+
+.addMore {
+    padding: 0px !important;
+}
+
+.asterisk {
+    color: red;
+}
+
+.section .displayContent {
+    height: auto !important;
+}
+
+.section .inputContent {
+    height: auto !important;
+}
+
+.projectAuthor .displayContent {
+    width: 30%;
+    text-align: right;
+    float: left;
+    height: 25px;
+}
+
+.projectAuthor .inputContent {
+    width: 70%;
+    text-align: left;
+    float: right;
+    height: 25px;
+}
+
+.evidenceBiteInfo .displayContent {
+    width: 30%;
+    text-align: right;
+    float: left;
+    height: 25px;
+}
+
+.evidenceBiteInfo .inputContent {
+    width: 70%;
+    text-align: left;
+    float: right;
+    height: 25px;
+}
+
+.topInfo {
+    font-family: Trebuchet MS,Tahoma,Verdana,Arial,sans-serif !important;
+    font-size: 1.1em !important;
+}
+
+.asteriskInfo {
+    font-family: Trebuchet MS,Tahoma,Verdana,Arial,sans-serif !important;
+    font-size: 1.1em !important;
+}
+
+.rightButton {
+    font-family: Trebuchet MS,Tahoma,Verdana,Arial,sans-serif !important;
+    font-size: 1.1em !important;
+    text-align: right;
+}
+/*Customized alert box CSS*/
+.dummyclass .ui-widget-content {
+    border-bottom: 0px solid #aaaaaa /*{borderColorContent}*/;
+    border-left: 0px;
+    border-top: 0px;
+    border-right: 0px;
+    background: #ffffff /*{bgColorContent}*/;
+    color: #222222 /*{fcContent}*/;
+}
+/* Corner radius */
+.dummyclass.ui-dialog.ui-corner-all {
+    border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+}
+
+.dummyclass .ui-dialog-title {
+    display: none;
+}
+
+.dummyclass .ui-widget-header {
+    position: relative;
+}
+
+    .dummyclass .ui-widget-header a {
+    }
+
+        .dummyclass .ui-widget-header a span {
+            /*background-image: url('../images/fancy_closebox.png');*/
+            background-repeat: no-repeat;
+            position: absolute;
+            top: -18px;
+            right: -18px;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            text-indent: -4444px;
+            z-index: 8040;
+        }
+
+.dummyclass {
+    background: #fff;
+}
+
+    .dummyclass .ui-dialog-buttonpane .ui-dialog-buttonset .ui-button, .dummyclass .ui-state-active, .dummyclass .ui-state-active, .dummyclass ui-state-hover, .dummyclass .ui-state-focus {
+        background: #25A6E1 !important;
+        background: -moz-linear-gradient(top,#8f43b9 0%,#8f43b9 100%) !important;
+        background: -webkit-gradient(linear,left top,left bottom,color-stop(0%,#8f43b9),color-stop(100%,#8f43b9)) !important;
+        background: -webkit-linear-gradient(top,#8f43b9 0%,#8f43b9 100%) !important;
+        background: -o-linear-gradient(top,#8f43b9 0%,#8f43b9 100%) !important;
+        background: -ms-linear-gradient(top,#8f43b9 0%,#8f43b9 100%) !important;
+        background: linear-gradient(top,#8f43b9 0%,#8f43b9 100%) !important;
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#8f43b9',endColorstr='#8f43b9',GradientType=0) !important;
+        padding: 4px 8px;
+        color: #fff;
+        font-size: 12px;
+        border-radius: 4px;
+        -moz-border-radius: 4px;
+        -webkit-border-radius: 4px;
+        border: 1px solid #ac71cd;
+        background-color: #0072bc !important;
+        border: none !important;
+        background-image: none !important;
+    }
+
+.alert, .confirm {
+    font-size: 15px;
+    padding: 1em;
+    text-align: center;
+    white-space: nowrap;
+    width: auto;
+    min-width: 150px;
+    /*max-width:450px;*/
+    word-wrap: normal;
+}
+/*Customized alert box CSS*/
+
+.chkWDLeft, .chkKILeft, .chkEPSLeft {
+    width: 50%;
+    float: left;
+}
+
+.chkWDRight, .chkKIRight, .chkEPSRight {
+    width: 50%;
+    float: right;
+}
+
+.DSChainContent, .DSChainInput {
+    clear: both;
+}
+
+ .DSChainContent .displayContent {
+	width:35%  
+	/*creates and overlap to push .inputContent to the next line */
+ } 
+ .DSChainContent .inputContent {
+	width:65%  
+	/*creates and overlap to push .inputContent to the next line */
+ } 
+
+#accordion {
+    width: 1024px !important;
+}
+
+.radioYesNo {
+    width: 40%;
+    float: left;
+}
+
+.addMoreSection {
+    width: 60%;
+    text-align: left;
+    float: right;
+}
+
+.evidenceExample {
+    display: none;
+    height: 370px;
+    clear: both;
+    border-style: solid;
+    border-width: 1px;
+    padding-top: 10px;
+    margin-bottom: 10px;
+}
+
+#example {
+    color: #07c !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+}
+
+    #example:hover {
+        text-decoration: underline !important;
+    }
+
+.tooltipText {
+    color: #eb8f00 !important;
+}
+
+/* fix: increase width of text areas*/
+textarea {
+	width:90%; /*increasing beyond 90% pushes the + buttons in some tabs.*/
+	height:130px;
+}
+.projectDesc .multilineTextArea textarea {
+	width:90%; /*increasing beyond 90% pushes the + buttons in some tabs.*/
+	min-height:180px;
+}
+/* increase width available in accordian*/
+.ui-accordion .ui-accordion-content{
+padding:1em 1em;
+}
+
+.description #txtHeading {
+	width:90%
+}
+.errorMsg{
+display: table;
+padding: 0px 0px 0px 301px;
+}
+.errorMsg1{
+display: table;
+padding: 0px 0px 9px 301px;
+}
+.projectInfo .dropdown, .projectAuthor .dropdown, .evidenceBiteInfo .dropdown{
+min-width:510px !important;
+}
+.FundingSectorMain .ddlFundingSector{
+min-width:510px !important;
+}
+input[type='button'],input[type='reset'],.previous{
+font-family: Trebuchet MS,Tahoma,Verdana,Arial,sans-serif;
+font-size: 1em;
+}
+.Cell
+    {
+	/* display: table-cell; */
+	border-bottom: solid grey;
+	border-width: thin;
+	min-height: 25px;
+	padding-top: 2px;       
+}
+.projectdsLink{
+color: cornflowerblue !important;
+}
+.Testimonials{
+text-align:left;
+width:100%;
+border:1px solid grey;
+}
+.Testimonials th{
+padding:5px;
+background-color: lightgrey;
+}
+.even{
+border:1px solid grey;
+padding:5px;
+background-color:white;
+}
+.odd{
+border:1px solid grey;
+padding:5px;
+}
+.documents{
+margin: 10px 0px 10px 0px !important;
+text-align: left;
+float: left;
+width: 64% !important;
+position: relative;
+left: 4px;
+padding-top: 5px;
+}
+
+.documentsView{
+margin: 10px 0px 10px 0px !important;
+text-align: left;
+float: left;
+width: 64% !important;
+position: relative;
+left: 300px;
+padding-top: 5px;
+}
+
+.fileControl{
+margin: -7px;
+position: relative;
+width: 71%;
+text-align: left;
+float: right;
+height: 25px;   
+padding-bottom:5px;
+}
+.Nodata{
+border:1px solid grey;
+padding:5px;
+text-align: center;
+}
+.textAreaHight{
+min-height:135px !important;
+}
+.OtherTxt{
+width: 50%;
+text-align: left;
+float: right;
+height: 25px; 
+display: table;
+padding: 0px 0px 5px 301px;
+margin: 0px -4px 0px 0px;
+}
+.OtherTxt .inputTextBox{
+min-width:240px !important;
+}
+.anchorClass{
+color: cornflowerblue !important;
+}
+.inputContent .EBdropDown{
+min-width: 315px !important;
+}
+#txtImageLibLink{
+color:rgb(76, 156, 200);
+}
+/* .Table
+    {
+        display: table;
+    }
+    .Title
+    {
+        display: table-caption;
+        text-align: center;
+        font-weight: bold;
+        font-size: larger;
+    }
+    .Heading
+    {
+        display: table-row;
+        font-weight: bold;
+        text-align: center;
+    }
+    .Row
+    {
+        display: table-row;
+    } */

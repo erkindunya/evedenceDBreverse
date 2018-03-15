@@ -1,0 +1,1897 @@
+﻿<!--SharePoint Script and CSS Files -->
+<script type="text/javascript" src="/_layouts/15/MicrosoftAjax.js"></script>
+<script type="text/javascript" src="/_layouts/15/init.js"></script>
+
+<script type="text/javascript" src="/_layouts/15/sp.runtime.js"></script>
+<script type="text/javascript" src="/_layouts/15/sp.js"></script>
+<script type="text/javascript" src="/_layouts/15/sp.taxonomy.js"></script>
+
+<!--Custom Script and CSS Files -->
+<link href="../../Style%20Library/EvidenceDB/CSS/jquery-ui.min.css" rel="stylesheet" />
+<script src="../../Style%20Library/EvidenceDB/Scripts/jquery-1.11.1.min.js"></script>
+<script src="../../Style%20Library/EvidenceDB/Scripts/jquery-ui.min.js"></script>
+<link href="../../Style%20Library/EvidenceDB/CSS/EvidenceDB.css" rel="stylesheet" />
+<script src="../../Style%20Library/EvidenceDB/Scripts/ProjectEvidenceBite.js"></script>
+<script src="../../Style%20Library/EvidenceDB/Scripts/Taxonomy.js"></script>
+
+<script src="../../Style%20Library/EvidenceDB/Scripts/PEBPeoplePickerCustom.js"></script>
+<script src="../../Style%20Library/EvidenceDB/Scripts/PEBSubmit.js"></script>
+<script src="../../Style%20Library/EvidenceDB/Scripts/PEBValidations.js"></script>
+<script src="../../Style%20Library/EvidenceDB/Scripts/ErrorLog.js"></script>
+<script src="../../Style%20Library/EvidenceDB/Scripts/WorkingOnIt.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $("#accordion").accordion({
+            header: "h3",
+            collapsible: true,
+            heightStyle: "content",
+            navigation: false
+        });
+         //to below script is used to get focused in the control on according click        
+	$("h3.ui-accordion-header").click(function(){
+		var isControlFocused=false;//This variable is used to stop iteration of loop once control is focused.
+			
+			$(this).nextAll('div').first().find('div').each(function(){
+				 	$(this).each(function()
+								{
+										if(!isControlFocused)
+										{
+											$(this).find('input,select,textarea').each(function()
+													{	
+														if(typeof($(this).attr('type'))!=='undefined' && $(this).attr('readonly')!='readonly')
+															{
+																if($(this).val()=='Get User' && $(this).attr('type')=='button')
+																{
+																	$(this).focus();
+																	isControlFocused=true;															
+																	return false;
+																}
+																else if( $(this).attr('type')!='button')
+																{
+																	$(this).focus();
+																	isControlFocused=true;															
+																	return false;
+																}
+
+			
+															}
+														else if( ($(this)[0].tagName=='select'||$(this)[0].tagName=='TEXTAREA' )&& $(this).attr('disabled')!='disabled')
+														{
+																$(this).focus();
+																isControlFocused=true;
+																return false;
+			
+														}		
+													});	
+												return false;								
+											}	
+									});
+							});
+								
+				});
+
+        $('#accordion button').click(function (e) {
+            e.preventDefault();
+            var delta = ($(this).is('.next') ? 1 : -1);
+
+            if (delta == 1) {
+                switch ($('#accordion').accordion('option', 'active') + delta) {
+                    case 1:
+                    case 2:
+                    case 3:
+                    case 4:
+                    case 5:
+					case 6:
+					case 7:
+                    case 8:
+                        $('#accordion').accordion('option', 'active', ($('#accordion').accordion('option', 'active') + delta));
+                        break;
+                    case 9:
+                        if (ValidatEvidenceBiteInfo()) {
+                            $('#accordion').accordion('option', 'active', ($('#accordion').accordion('option', 'active') + delta));
+                        }
+                        break;
+                }
+            }
+            else {
+                $('#accordion').accordion('option', 'active', ($('#accordion').accordion('option', 'active') + delta));
+            }
+        });
+        //To Display Evidence Bite Information on Load.
+        $("#accordion").accordion("option", "active", 8);
+    });
+</script>
+
+<script type="text/javascript">
+    window.alert = function (message) {
+        $(document.createElement('div'))
+            .attr({ 'class': 'alert' })
+            .html(message)
+            .dialog({
+                buttons: {
+                    OK: function () {
+                        $(this).dialog('close');
+                        $(".v4master").css("overflow-y", "auto");
+                    }
+                },
+                close: function () {
+                    $(this).remove();
+                    $(".v4master").css("overflow-y", "auto");
+                },
+                draggable: false,
+                modal: true,
+                resizable: false,
+                width: 'auto',
+
+            });
+
+        $(".alert").parent().addClass("dummyclass");
+        $(".dummyclass").addClass("popupfixing");
+
+    };
+    window.confirm = function (message) {
+        $(document.createElement('div'))
+            .attr({ 'class': 'confirm' })
+            .html(message)
+            .dialog({
+                resizable: false,
+                width: 'auto',
+                modal: true,
+                buttons: {
+                    OK: function () {
+                        location.reload();
+                    },
+                    Cancel: function () {
+                        $(this).dialog("close");
+                        window.location.replace("/Pages/Add-Data.aspx");
+                    }
+                }
+            });
+
+        $(".confirm").parent().addClass("dummyclass");
+        $(".dummyclass").addClass("popupfixing");
+    };
+</script>
+
+<script type="text/javascript">
+    //variables declaration
+    var userName = null,
+        user,
+        context,
+        session,
+        pdList,
+        internalJVField,
+        internalJVChoices,
+        listItem,
+        projectDatasheetID,
+        termStore,
+        groups,
+        termSets,
+        terms,
+        termSetEnumerator,
+        selectedArea,
+        selectedSector,
+        selectedSector1,
+        selectedSector2,
+        selectedFOP,
+        selectedBusiness,
+        selectedTopic,
+        peoplePickerUser,
+        crmAuthorID,
+        bidLeadID=[],
+        commercialManagerID=[],
+        contractsManagerID=[],
+        designManagerID=[],
+        designManagerID=[],
+        isSecondSectorEnable = false,
+        isThirdSectorEnable = false,
+		isSecondTestimonialEnable = false,
+        isThirdTestimonialEnable = false,
+        isFourthTestimonialEnable = false,
+        isFifthTestimonialEnable = false,
+        isSecondAwardEnable = false,
+        isThirdAwardEnable = false,
+        isFourthAwardEnable = false,
+        isFifthAwardEnable = false,
+       
+        hasAreas = true,
+        hasLocations = true,
+        isCategoriesEnable = false,
+        successMessage,
+        procurementSubTypeValue,
+        subSectorValue1,
+        subSectorValue2,
+        subSectorValue3,
+        areaValue,
+        locationValue,
+        returnValue = false;
+    var diffPlanned = 0,
+        diffActual = 0,
+        specialKeys = new Array();
+    specialKeys.push(8); //Backspace
+
+    //variables for Controls
+    var ddlStageOfProject,
+        ddlDeliveryRegion,
+        ddlInternalJV,
+        ddlRegion,
+        ddlArea,
+        ddlLocation,
+        ddlSector,
+        ddlSubSector,
+        ddlSector1,
+        ddlSubSector1,
+        ddlSector2,
+        ddlSubSector2,
+        ddlProcurement,
+        ddlSubProcurement,
+        ddlContract,
+        ddlAppointment,
+        chkBoxWDGroup,
+        chkWDLeft,
+        chkWDRight,
+        chkBoxKIGroup,
+        chkKILeft,
+        chkKIRight,
+        ddlPreConstructionRating,
+        ddlHandoverRating,
+		ddlCEEQUALRating,
+        ddlEPCRating,
+        chkBoxEPSGroup,
+        chkEPSLeft,
+        chkEPSRight,
+        ddlBusinessFunctions,
+        ddlTopic,
+        ddlCategory1,
+        ddlCategory2,
+		ddlFundingSector;
+
+    var defaultOption = $("<option/>");
+    defaultOption.attr("value", 'default').text('Please select...');
+
+    //Hard-coded variables initialization
+    var siteUrl = '',
+        listProjectDatasheet = 'Project Datasheet',
+        listProjectEvidenceBite = 'Project Evidence Bites',
+        taxonomyGroupName = 'Construction',
+        tsNameProjectStage = 'Project Stage',
+        psTerms,
+        tsNameDeliveryRegion = 'Delivery Regions',
+		tsNameFundingSector='Funding Sector',
+		FundingSectorTerms,
+        drTerms,
+        tsNameLocations = 'Geographic Locations',
+        locationsTerms,
+        tsLocations,
+        tsAreas,
+        tsSelectedLocation,
+        areasTermSet,
+        locationTermSet,
+        areasTerms,
+        locationTerms,
+        tsNameSector = 'Sector',
+        tsSector,
+        sectorsTerms,
+        sectorTerms1,
+        sectorTerms2,
+        sectorsTermSet,
+        sectorsTermSet1,
+        sectorsTermSet2,
+        sectorTerms,
+        tsNameFOP = 'Form of Procurement',
+        tsFOPS,
+        FOPSTerms,
+        FOPTermSet,
+        FOPTerms,
+        tsNameFOC = 'Form of Contract',
+        FOCTerms,
+        tsNameDS = 'Design Stages',
+        dsTerms,
+        tsNameWD = 'Works Description',
+        wdTerms,
+        tsNameScopeKI = 'Scope of Services',
+        scopeKITerms,
+        tsNameBREEAM = 'BREEAM',
+        breeamTerms,
+        tsNameEPCRating = 'EPC Rating',
+        EPCRatingTerms,
+        tsNameEvidenceStage = 'Evidence Project Stage',
+        epsTerms,
+        tsNameBusinessFunction = 'Business Functions',
+        businessTerms,
+        tsBusinessFunctions,
+        businessFunctionTermSet,
+        topicTerms,
+        tsTopic,
+        categoriesTermSet,
+        categoryTerms,
+        tsCategory,
+		tsCEEQUALRating="CEEQUAL",
+		CEEQUALTerms;
+
+    $(document).ready(
+        function () {
+
+            //fetching Controls to bind data
+            ddlStageOfProject = $('#ddlStageOfProject');
+            ddlDeliveryRegion = $('#ddlDeliveryRegion');
+            ddlInternalJV = $('#ddlInternalJV');
+            ddlRegion = $('#ddlRegion');
+            ddlArea = $('#ddlArea');
+            ddlLocation = $('#ddlLocation');
+            ddlSector = $('#ddlSector');
+            ddlSubSector = $('#ddlSubSector');
+            ddlSector1 = $('#ddlSector1');
+            ddlSubSector1 = $('#ddlSubSector1');
+            ddlSector2 = $('#ddlSector2');
+            ddlSubSector2 = $('#ddlSubSector2');
+            ddlProcurement = $('#ddlProcurement');
+            ddlSubProcurement = $('#ddlSubProcurement');
+            ddlContract = $('#ddlContract');
+            ddlAppointment = $('#ddlAppointment');
+            chkBoxWDGroup = $('#chkBoxWDGroup');
+            chkWDLeft = $('#chkWDLeft');
+            chkWDRight = $('#chkWDRight');
+            chkBoxKIGroup = $('#chkBoxKIGroup');
+            chkKILeft = $('#chkKILeft');
+            chkKIRight = $('#chkKIRight');
+            ddlPreConstructionRating = $('#ddlPreConstructionRating');
+            ddlHandoverRating = $('#ddlHandoverRating');
+			ddlCEEQUALRating = $('#ddlCEEQUALRating');
+            ddlEPCRating = $('#ddlEPCRating');
+            chkBoxEPSGroup = $('#chkBoxEPSGroup');
+            chkEPSLeft = $('#chkEPSLeft');
+            chkEPSRight = $('#chkEPSRight');
+            ddlBusinessFunctions = $('#ddlBusinessFunctions');
+            ddlTopic = $('#ddlTopic');
+            ddlCategory1 = $('#ddlCategory1');
+            ddlCategory2 = $('#ddlCategory2');
+			ddlFundingSector = $('#ddlFundingSector');
+
+            //Redirecting the user to Add-Data.aspx Page on 'Cancel' button click in LIST FORMS.
+            $('input[value=Cancel]').click(function () {
+                window.location.replace("/Pages/Add-Data.aspx");
+            });
+
+            // To Enable and disable 'Evidence Bite Example' DIV
+            $('#example').click(function () {
+                if ($('.evidenceExample').css('display') == 'none') {
+                    $('.evidenceExample').css('display', 'block');
+                    $("#example").text("Hide completed example.");
+                }
+                else {
+                    $('.evidenceExample').css('display', 'none');
+                    $("#example").text("See completed example.");
+                }
+            });
+
+            // Date Picker with Validation i.e. Completion Date > Start Date
+            $('#dtPlannedStartDate').datepicker({
+                dateFormat: 'dd/mm/yy',
+                changeMonth: true, changeYear: true,
+                beforeShow: function () {
+                    $(this).datepicker('option', 'maxDate', jQuery('#dtPlannedCompletionDate').val());
+                }
+            });
+            $('#dtPlannedCompletionDate').datepicker({
+                dateFormat: 'dd/mm/yy',
+                changeMonth: true, changeYear: true,
+                beforeShow: function () {
+                    $(this).datepicker('option', 'minDate', jQuery('#dtPlannedStartDate').val());
+                }
+            });
+
+            $('#dtActualStartDate').datepicker({
+                dateFormat: 'dd/mm/yy',
+                changeMonth: true, changeYear: true,
+                beforeShow: function () {
+                    $(this).datepicker('option', 'maxDate', jQuery('#dtActualCompletionDate').val());
+                }
+            });
+            $('#dtActualCompletionDate').datepicker({
+                dateFormat: 'dd/mm/yy',
+                changeMonth: true, changeYear: true,
+                beforeShow: function () {
+                    $(this).datepicker('option', 'minDate', jQuery('#dtActualStartDate').val());
+                },
+                onClose: function (selectedDate) {
+
+                    var d1 = $('#dtPlannedStartDate').datepicker('getDate');
+                    var d2 = $('#dtPlannedCompletionDate').datepicker('getDate');
+                    var d3 = $('#dtActualStartDate').datepicker('getDate');
+                    var d4 = $('#dtActualCompletionDate').datepicker('getDate');
+
+
+                    if (d1 && d2 && d3 && d4) {
+                        diffPlanned = Math.floor((d2.getTime() - d1.getTime()) / 86400000); // ms per day
+                        diffActual = Math.floor((d4.getTime() - d3.getTime()) / 86400000); // ms per day
+
+                        if (diffActual > diffPlanned)
+                            $('#extensionCheck').show();
+                        else
+                            $('#extensionCheck').hide();
+                    }
+                }
+            });
+
+            //#region [ Validations ]
+
+            //================================================== [ Change Events to Hide Validation error Message ]
+            $(document).on('change', function () {
+                $(".errorText").css("display", "none");
+            });
+            //================================================== [ Change Events to Hide Validation error Message ]
+
+            //#endregion
+
+            context = new SP.ClientContext.get_current();
+            var web = context.get_web();
+            session = SP.Taxonomy.TaxonomySession.getTaxonomySession(context);
+            termStore = session.getDefaultSiteCollectionTermStore();
+
+            // To Get Internal JV field (choice field values) from the Site Column using 'Project Datasheet' List
+            pdList = web.get_lists().getByTitle(listProjectDatasheet);
+            internalJVField = context.castTo(pdList.get_fields().getByInternalNameOrTitle("Internal JV"), SP.FieldChoice);
+
+            //To get logged in User Name
+            user = web.get_currentUser();
+            user.retrieve();
+
+            context.load(session);
+            context.load(termStore);
+            context.load(web);
+            context.load(internalJVField);
+
+            context.executeQueryAsync(onTaxonomySession, onTaxonomyFailed);
+        });
+</script>
+
+
+<div class="formBody">
+    <div class="formContent">
+        <div class="asteriskInfo">Mandatory information is marked with an asterisk(<span class="asterisk">*</span>).</div>
+		<div  class="asteriskInfo" style='padding: 4px 0px 4px 0px;'>
+		<h3><label>Scheme/Project Title:  </label><b><label id='PDTitle'></label></b></h3>
+		</div>
+        <div id="accordion">
+            <h3>
+                <a href="#" id="firstSection">
+                    AUTHOR
+                </a>
+            </h3>
+            <div class="projectAuthor">
+                <div class="displayContent">
+                    Author (Best Practice Champion)
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="255" id="txtAuthor" readonly="readonly" />
+                </div>
+
+                <div class="displayContent">
+                    CRM Opportunity Author
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="255" id="ppCRMAuthor" readonly="readonly" />
+                    <input type="button" value="Get User" class="peoplePickerButton" onclick="PeoplePickerCRMAuth();" />
+
+                </div>
+
+                <div class="displayContent">
+                    Stage of Project <span class="asterisk">* </span>
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL" id="ddlStageOfProject">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <span id="errorStageOfProject" class="errorText" style="color: Red; display: none" />
+                </div>
+                <div class="displayContent">
+                </div>
+                <div class="inputContent">
+                    <span class="tooltipText">Please change this to reflect the current stage of the project.</span>
+                </div>
+                <div class="formButtons">
+                    <button class="next">Next</button>
+
+                </div>
+            </div>
+
+            <h3>
+                <a href="#" id="secondSection">
+                    PROJECT INFORMATION
+                </a>
+            </h3>
+
+            <div class="projectInfo">
+
+                <div class="displayContent">
+                    Scheme/Project Title <span class="asterisk">* </span>
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="100" id="txtTitle" />
+                    <span id="errorTitle" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="displayContent">
+                    Otherwise known as
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="100" id="txtOtherwise" />
+                </div>
+
+
+                <div class="displayContent">
+                    contract number <span class="asterisk">* </span>
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="50" id="txtContractNumber" />
+                    <span id="errorContractNumber" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="displayContent">
+                    Client <span class="asterisk">* </span>
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="100" id="txtClient" />
+                    <span id="errorClient" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="displayContent">
+                    Kier delivery region <span class="asterisk">* </span>
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL" id="ddlDeliveryRegion">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <span id="errorDeliveryRegion" class="errorText" style="color: Red; display: none" />
+                </div>
+				<div class="displayContent">
+                    External JV  <span class="asterisk">* </span> 
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL" id="ddlExternalJV">
+                        <option value="default">Please select...</option>
+						<option value="Yes">Yes</option>
+						<option value="No">No</option>
+                    </select>				
+                    <span id="errorIsExternalJV" class="errorText" style="color: Red; display: none" /> 
+                </div>
+				<div id='externalDiv'  style='display:none'>
+					<div class="displayContent">
+					  
+					</div>
+					<div class="inputContent" >
+						<input type="text" class="inputTextBox" maxlength="100" id="txtExternal" />
+					    <span id="errorExternalJV" class="errorText" style="color: Red; display: none" />
+					</div>
+				</div>
+
+                <div class="displayContent">
+                    Internal JV <span class="asterisk">* </span>
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL" id="ddlInternalJV">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <span id="errorInternalJV" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="location" id="locationInfo">
+                    <div class="displayContent">
+                        <div class="mainHeading">
+                            Project location <span class="asterisk">* </span>
+                        </div>
+                    </div>
+                    <div class="inputContent">
+                        <span id="errorProjectLocation" class="errorText" style="color: Red; display: none" />
+                    </div>
+
+                    <div class="displayContent">
+                    </div>
+                    <div class="inputContent">
+                        <div class="locationContent">Geographical Region</div>
+                        <div class="locationValue">
+                            <select class="inputDDL" id="ddlRegion">
+                                <option value="default">Please select...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="secondHeading">
+                        <div class="displayContent">
+                        </div>
+                        <div class="inputContent">
+                            <div class="locationContent">Area</div>
+                            <div class="locationValue">
+                                <select class="inputDDL" id="ddlArea">
+                                    <option value="default">Please select...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="thirdHeading">
+                        <div class="displayContent">
+                        </div>
+                        <div class="inputContent">
+                            <div class="locationContent">Location</div>
+                            <div class="locationValue">
+                                <select class="inputDDL" id="ddlLocation">
+                                    <option value="default">Please select...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="displayContent">
+                    Sector <span class="asterisk">* </span>
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL" id="ddlSector">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <select class="inputDDL" id="ddlSubSector">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <input type="button" value="+" class="addMore" onclick="enableSecondSector()" />
+                </div>
+
+                <div class="sector2" id="sector2">
+                    <div class="displayContent">
+                        Select second sector and sub-sector
+                    </div>
+                    <div class="inputContent">
+                        <select class="inputDDL" id="ddlSector1">
+                            <option value="default">Please select...</option>
+                        </select>
+                        <select class="inputDDL" id="ddlSubSector1">
+                            <option value="default">Please select...</option>
+                        </select>
+                        <input type="button" value="+" class="addMore" onclick="enableThirdSector()" />
+                    </div>
+					<div style="clear: both;padding-bottom: 16px;"></div>
+                </div>
+
+                <div class="sector3" id="sector3">
+
+                    <div class="displayContent">
+                        Select third Sector and Sub-Sector
+                    </div>
+                    <div class="inputContent">
+                        <select class="inputDDL" id="ddlSector2">
+                            <option value="default">Please select...</option>
+                        </select>
+                        <select class="inputDDL" id="ddlSubSector2">
+                            <option value="default">Please select...</option>
+                        </select>
+                    </div>
+					<div style="clear: both;padding-bottom: 16px;"></div>
+                </div>
+				<div class='FundingSectorMain'>
+					<div class='FundingSector'>
+						<div class="displayContent">
+						   Funding Sector <span class="asterisk">* </span>
+						</div>
+						<div class="inputContent ddlFundingSector">
+							<select class="inputDDL ddlFundingSector" id='ddlFundingSector'>
+								<option value="default">Please select...</option>
+							</select><input type="button" value="+" class="addMore" id='addMoreFundingSectors'  />
+							<span class="errorText errorDdlFundingSector" style="color: Red; display: none" />
+						</div>
+					</div>
+				  </div>
+                <div class="displayContent">
+                    Form of Procurement <span class="asterisk" id="asteriskFOP">* </span>
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL" id="ddlProcurement">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <select class="inputDDL" id="ddlSubProcurement">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <span id="errorProcurement" class="errorText" style="color: Red; display: none" />
+                </div>
+				<div class="OtherTxt" style='display:none'>
+					 Other :<span class="asterisk" id="asteriskFOP">* </span>
+					<input type='text' id='txtFormOfProcurementOther' class="inputTextBox" maxlength="100"></input>
+				</div>
+				<div class='errorMsg'>
+	                    	<span id="errorOtherProcurement" class="errorText" style="color: Red; display: none" />
+				</div>
+                <div class="displayContent">
+                    Form of Contract (NEC/JCT etc) <span class="asterisk" id="asteriskFOC">* </span>
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL dropdown" id="ddlContract">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <span id="errorContract" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="displayContent">
+                    Design Stage at Appointment <span class="asterisk" id="asteriskDSA">* </span>
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL dropdown" id="ddlAppointment">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <span id="errorAppointment" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="formButtons">
+                    <button class="previous">Previous</button>
+                    <button class="next">Next</button>
+
+                </div>
+            </div>
+
+            <h3>
+                <a href="#" id="thirdSection">
+                    VALUE & CONTRACT DATES
+                </a>
+            </h3>
+
+            <div class="valuesInfo">
+
+                <div class="displayContent">
+                    Value (at contract award)<span class="asterisk">* </span>
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="15" id="txtAwardValue" />&pound;
+                    <span id="errorAwardValue" class="errorAwardValue" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                </div>
+
+                <div class="displayContent">
+                    Value (at contract completion) <span class="asterisk" id="asteriskCCValue">* </span>
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="15" id="txtCompletionValue" />&pound;
+                    <span id="errorCompletionValue" class="errorCompletionValue" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                </div>
+
+                <div class="valueCheck" id="valueCheck">
+                    <div class="displayContent">
+                        Agreed cost variance ?
+                    </div>
+                    <div class="inputContent">
+                        <input type="radio" id="rbAgreedCostVarianceYes" name="rbAgreedCostVariance" value="Yes" />
+                        Yes
+                        <input type="radio" id="rbAgreedCostVarianceNo" name="rbAgreedCostVariance" value="No" checked="checked" />No
+                    </div>
+
+                    <div class="displayContent">
+                        Reason for agreed change <span class="asterisk">* </span>
+                    </div>
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <div>
+                                <textarea cols="60" rows="4" id="txtReasonForAgreed"></textarea>
+                            </div>
+                            <div>
+                                <span id="errorReasonForAgreed" class="errorText" style="color: Red; display: none" />
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="displayContent">
+                    Planned start on site date <span class="asterisk">* </span>
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="255" id="dtPlannedStartDate" />
+                    <span id="errorPlannedStartDate" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="displayContent">
+                    Planned completion on site date <span class="asterisk" id="asteriskPCDate">* </span>
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="255" id="dtPlannedCompletionDate" />
+                    <span id="errorPlannedCompletionDate" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="displayContent">
+                    Actual start on site date <span class="asterisk" id="asteriskASDate">* </span>
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="255" id="dtActualStartDate" />
+                    <span id="errorActualStartDate" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="displayContent">
+                    Actual completion on site date <span class="asterisk" id="asteriskACDate">* </span>
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="255" id="dtActualCompletionDate" />
+                    <span id="errorActualCompletionDate" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="extensionCheck" id="extensionCheck">
+                    <div class="displayContent">
+                        Extension of time given?
+                    </div>
+                    <div class="inputContent">
+                        <input type="radio" id="rbAgreedExtensionYes" name="rbAgreedExtension" value="Yes" />
+                        Yes
+                        <input type="radio" id="rbAgreedExtensionNo" name="rbAgreedExtension" value="No" checked="checked" />No
+                    </div>
+
+                    <div class="displayContent">
+                        Reason for extension of time / delay <span class="asterisk">* </span>
+                    </div>
+                    <div class="multilineTextArea">
+
+                        <div class="inputContent">
+                            <div>
+                                <textarea cols="60" rows="4" id="txtReasonForExtension"></textarea>
+                            </div>
+                            <div>
+                                <span id="errorReasonForExtension" class="errorText" style="color: Red; display: none" />
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="displayContent">
+                    Pre-Construction duration
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="10" id="txtPreConstructionduration" />
+                    weeks <span id="errorPreConstructionduration" class="errorPreConstructionduration" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                </div>
+
+
+                <div class="formButtons">
+                    <button class="previous">Previous</button>
+                    <button class="next">Next</button>
+
+                </div>
+            </div>
+
+
+            <h3>
+                <a href="#" id="fourthSection">
+                    PROJECT DESCRIPTION
+                </a>
+            </h3>
+            <div class="projectDesc">
+
+                <div class="displayContent">
+                    Project Description<span class="asterisk" id="asteriskPD">* </span>
+                    <br />
+                    (Project drivers and outputs)
+                </div>
+                <div class="multilineTextArea">
+                    <div class="inputContent">
+                        <div>
+                            <textarea cols="60" rows="4" id="txtProjectDescription"></textarea>
+                        </div>
+                        <div>
+                            <span id="errorProjectDescription" class="errorText" style="color: Red; display: none" />
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="checkBoxWDGroupContent">
+                    Work Description <span class="asterisk" id="asteriskWD">* </span>
+                    <br />
+                    (Please select as many as required)
+                </div>
+                <div class="checkBoxWDGroup">
+                    <div>
+                        <div id="chkBoxWDGroup" class="chkBoxWDGroup">
+                            <div id="chkWDLeft" class="chkWDLeft"></div>
+                            <div id="chkWDRight" class="chkWDRight"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <span id="errorWorkDescription" class="errorText" style="color: Red; display: none" />
+                    </div>
+                </div>
+
+                <div class="formButtons">
+                    <button class="previous">Previous</button>
+                    <button class="next">Next</button>
+
+                </div>
+            </div>
+
+            <h3>
+                <a href="#" id="fifthSection">
+                    THE TEAM
+                </a>
+            </h3>
+            <div class="teamInfo">
+                <p>
+                    Delivery Team
+                </p>
+                <div class="displayContent">
+                    Bid Lead <span class="asterisk">* </span>
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="255" id="ppBidLead" readonly="readonly" />
+                    <input type="button" value="Get User" class="peoplePickerButton" onclick="PeoplePickerBidLead();" />
+                </div>
+				<div class='errorMsg'>
+					 <span id="errorBidLead" class="errorText" style="color: Red; display: none" />
+				</div>
+                <div class="displayContent">
+                    QS / Commercial Manager <span class="asterisk" id="asteriskQS">* </span>
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="255" id="ppCommercialManager" readonly="readonly" />
+                    <input type="button" value="Get User" class="peoplePickerButton" onclick="PeoplePickerQSManager();" />
+                    <span id="errorCommercialManager" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="displayContent">
+                    Project / Contracts Manager <span class="asterisk" id="asteriskPCM">* </span>
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="255" id="ppContractsManager" readonly="readonly" />
+                    <input type="button" value="Get User" class="peoplePickerButton" onclick="PeoplePickerProjectManager();" />
+                    <span id="errorContractsManager" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="displayContent">
+                    Design Manager <span class="asterisk" id='asteriskDM'>* </span>
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="255" id="ppDesignManager" readonly="readonly" />
+                    <input type="button" value="Get User" class="peoplePickerButton" onclick="PeoplePickerDesignManager();" />
+                </div>
+				<div class='errorMsg'>
+					<span id="errorDesignManager" class="errorText" style="color: Red; display: none" />
+				</div>
+                <div class="checkBoxKIGroupContent">
+                    Scope of Kier Involvement
+                    <br />
+                    (Please select as many as required) <span class="asterisk" id="asteriskKI">* </span>
+                </div>
+                <div class="checkBoxKIGroup">
+
+                    <div>
+                        <div id="chkBoxKIGroup" class="chkBoxKIGroup">
+                            <div id="chkKILeft" class="chkKILeft"></div>
+                            <div id="chkKIRight" class="chkKIRight"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <span id="errorKIGroup" class="errorText" style="color: Red; display: none" />
+                    </div>
+                </div>
+
+                <div class="DSChainContent">
+                    <div class="displayContent Cell">
+                        Designers / Supply Chain (Provide company names)
+                    </div>
+                    <div class="inputContent Cell">
+                        <div class="textBoxHeading">
+                            &nbsp;
+                        </div>
+                        <div class="chkBox1Heading Header">
+                            Novated
+                        </div>
+                        <div class="chkBox2Heading">
+                            Client Team
+                        </div>
+						  <div class="chkBox2Heading">
+                            Not applicable
+                        </div>
+                    </div>
+                </div>
+
+                <div class="DSChainInput">
+
+					<div class="displayContent Cell">
+                        Architect  <span class="asterisk asteriskDesignSC">* </span>
+                    </div>
+                    <div class="inputContent Cell">
+                        <div class="textBoxHeading">
+                            <input type="text" class="inputTextBox" maxlength="100" id="txtArchitect" />
+                        </div>
+                        <div class="chkBox1Heading">
+                            <input type='checkbox' id="chkArchitectN" class='chkArchitectN' />
+                        </div>
+                        <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkArchitectCT" class='chkArchitectCT' />
+                        </div>
+						 <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkArchitectNA" class='chkArchitectCT' />
+                        </div>
+                    </div>
+					<div class='errorMsg'>
+						<span id="errorArchitect" class="errorText" style="color: Red; display: none" />
+					</div>
+          		 <div class="displayContent Cell">
+                        Acoustician<span class="asterisk asteriskDesignSC">* </span>
+                    </div>
+                    <div class="inputContent Cell">
+                        <div class="textBoxHeading">
+                            <input type="text" class="inputTextBox" maxlength="100" id="txtAcoustician" />
+                        </div>
+                        <div class="chkBox1Heading">
+                            <input type='checkbox' id="chkAcousticianN" class="chkAcousticianN" />
+                        </div>
+                        <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkAcousticianCT" class="chkAcousticianCT" />
+                        </div>
+						<div class="chkBox2Heading">
+                            <input type='checkbox' id="chkAcousticianNA" class="chkAcousticianCT" />
+                        </div>
+                    </div>
+					<div class='errorMsg'>
+						<span id="errorAcoustician" class="errorText" style="color: Red; display: none" />
+					</div>
+
+                    <div class="displayContent Cell">
+                        Structural & Civil Eng.<span class="asterisk asteriskDesignSC">* </span>
+                    </div>
+                    <div class="inputContent Cell">
+                        <div class="textBoxHeading">
+                            <input type="text" class="inputTextBox" maxlength="100" id="txtStructural" />
+                        </div>
+                        <div class="chkBox1Heading">
+                            <input type='checkbox' id="chkStructuralN" class="chkStructuralN" />
+                        </div>
+                        <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkStructuralCT" class="chkStructuralCT" />
+                        </div>
+						<div class="chkBox2Heading">
+                            <input type='checkbox' id="chkStructuralNA" class="chkStructuralCT" />
+                        </div>
+                    </div>
+					<div class='errorMsg'>
+						<span id="errorSCE" class="errorText" style="color: Red; display: none" />
+					</div>
+
+                    <div class="displayContent Cell">
+                        FF+E<span class="asterisk asteriskDesignSC">* </span>
+                    </div>
+                    <div class="inputContent Cell">
+                        <div class="textBoxHeading">
+                            <input type="text" class="inputTextBox" maxlength="100" id="txtFFE" />
+                        </div>
+                        <div class="chkBox1Heading">
+                            <input type='checkbox' id="chkFFEN" class="chkFFEN" />
+                        </div>
+                        <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkFFECT" class="chkFFECT" />
+                        </div>
+						 <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkFFENA" class="chkFFECT" />
+                        </div>
+                    </div>
+					<div class='errorMsg'>
+						<span id="errorFFE" class="errorText" style="color: Red; display: none" />
+					</div>
+
+                    <div class="displayContent Cell">
+                        M+E Engineering<span class="asterisk asteriskDesignSC">* </span>
+                    </div>
+                    <div class="inputContent Cell">
+                        <div class="textBoxHeading">
+                            <input type="text" class="inputTextBox" maxlength="100" id="txtME" />
+                        </div>
+                        <div class="chkBox1Heading">
+                            <input type='checkbox' id="chkMEN" class="chkMEN" />
+                        </div>
+                        <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkMECT" class="chkMECT" />
+                        </div>
+						 <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkMENA" class="chkMECT" />
+                        </div>
+                    </div>
+					<div class='errorMsg'>
+						<span id="errorMEE" class="errorText" style="color: Red; display: none" />
+					</div>
+
+                    <div class="displayContent Cell">
+                        ICT<span class="asterisk asteriskDesignSC">* </span>
+                    </div>
+                    <div class="inputContent Cell">
+                        <div class="textBoxHeading">
+                            <input type="text" class="inputTextBox" maxlength="100" id="txtICT" />
+                        </div>
+                        <div class="chkBox1Heading">
+                            <input type='checkbox' id="chkICTN" class="chkICTN" />
+                        </div>
+                        <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkICTCT" class="chkICTCT" />
+                        </div>
+						 <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkICTNA" class="chkICTCT" />
+                        </div>
+                    </div>
+					<div class='errorMsg'>
+						<span id="errorICT" class="errorText" style="color: Red; display: none" />
+					</div>
+                    <div class="displayContent Cell">
+                        Cost Advisors<span class="asterisk asteriskDesignSC">* </span>
+                    </div>
+                    <div class="inputContent Cell">
+                        <div class="textBoxHeading">
+                            <input type="text" class="inputTextBox" maxlength="100" id="txtCostAdvisiors" />
+                        </div>
+                        <div class="chkBox1Heading">
+                            <input type='checkbox' id="chkCostAdvisiorsN" class="chkCostAdvisiorsN" />
+                        </div>
+                        <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkCostAdvisiorsCT" class="chkCostAdvisiorsCT" />
+                        </div>
+						<div class="chkBox2Heading">
+                            <input type='checkbox' id="chkCostAdvisiorsNA" class="chkCostAdvisiorsCT" />
+                        </div>
+                    </div>
+					<div class='errorMsg'>
+						<span id="errorCA" class="errorText" style="color: Red; display: none" />
+					</div>
+                    <div class="displayContent Cell">
+                        Planning Consultant<span class="asterisk asteriskDesignSC">* </span>
+                    </div>
+                    <div class="inputContent Cell">
+                        <div class="textBoxHeading">
+                            <input type="text" class="inputTextBox" maxlength="100" id="txtPlanningConsultant" />
+                        </div>
+                        <div class="chkBox1Heading">
+                            <input type='checkbox' id="chkPlanningConsultantN" class="chkPlanningConsultantN" />
+                        </div>
+                        <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkPlanningConsultantCT" class="chkPlanningConsultantCT" />
+                        </div>
+						<div class="chkBox2Heading">
+                            <input type='checkbox' id="chkPlanningConsultantNA" class="chkPlanningConsultantCT" />
+                        </div>
+                    </div>
+					<div class='errorMsg'>
+						<span id="errorPC" class="errorText" style="color: Red; display: none" />
+					</div>
+
+                    <div class="displayContent Cell">
+                        M+E Installers<span class="asterisk asteriskDesignSC">* </span>
+                    </div>
+                    <div class="inputContent Cell">
+                        <div class="textBoxHeading">
+                            <input type="text" class="inputTextBox" maxlength="100" id="txtMEInstallers" />
+                        </div>
+                        <div class="chkBox1Heading">
+                            <input type='checkbox' id="chkMEInstallersN" class="chkMEInstallersN" />
+                        </div>
+                        <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkMEInstallersCT" class="chkMEInstallersCT" />
+                        </div>
+						 <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkMEInstallersNA" class="chkMEInstallersCT" />
+                        </div>
+                    </div>
+					<div class='errorMsg'>
+						<span id="errorMEI" class="errorText" style="color: Red; display: none" />
+					</div>
+                    <div class="displayContent Cell">
+                        Environmental<span class="asterisk asteriskDesignSC">* </span>
+                    </div>
+                    <div class="inputContent Cell">
+                        <div class="textBoxHeading">
+                            <input type="text" class="inputTextBox" maxlength="100" id="txtEnvironmental" />
+                        </div>
+                        <div class="chkBox1Heading">
+                            <input type='checkbox' id="chkEnvironmentalN" class="chkEnvironmentalN" />
+                        </div>
+                        <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkEnvironmentalCT" class="chkEnvironmentalCT" />
+                        </div>
+						<div class="chkBox2Heading">
+                            <input type='checkbox' id="chkEnvironmentalNA" class="chkEnvironmentalCT" />
+                        </div>
+                    </div>
+					<div class='errorMsg'>
+						<span id="errorEvironmental" class="errorText" style="color: Red; display: none" />
+					</div>
+
+                    <div class="displayContent Cell">
+                        Project Management<span class="asterisk asteriskDesignSC">* </span>
+                    </div>
+                    <div class="inputContent Cell">
+                        <div class="textBoxHeading">
+                            <input type="text" class="inputTextBox" maxlength="100" id="txtProjectManagement" />
+                        </div>
+                        <div class="chkBox1Heading">
+                            <input type='checkbox' id="chkProjectManagementN" class="chkProjectManagementN" />
+                        </div>
+                        <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkProjectManagementCT" class="chkProjectManagementCT" />
+                        </div>
+						 <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkProjectManagementNA" class="chkProjectManagementCT" />
+                        </div>
+                    </div>
+					<div class='errorMsg'>
+						<span id="errorPM" class="errorText" style="color: Red; display: none" />
+					</div>
+                    <div class="displayContent Cell">
+                        Landscape<span class="asterisk asteriskDesignSC">* </span>
+                    </div>
+                    <div class="inputContent Cell">
+                        <div class="textBoxHeading">
+                            <input type="text" class="inputTextBox" maxlength="100" id="txtLandscape" />
+                        </div>
+                        <div class="chkBox1Heading">
+                            <input type='checkbox' id="chkLandscapeN" class="chkLandscapeN" />
+                        </div>
+                        <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkLandscapeCT" class="chkLandscapeCT" />
+                        </div>
+						  <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkLandscapeNA" class="chkLandscapeCT" />
+                        </div>
+                    </div>
+					<div class='errorMsg'>
+						<span id="errorLandscape" class="errorText" style="color: Red; display: none" />
+					</div>
+					 <div class="displayContent Cell">
+                        Specialist Adviser<span class="asterisk asteriskDesignSC">* </span>
+                    </div>
+                    <div class="inputContent Cell">
+                        <div class="textBoxHeading">
+                            <input type="text" class="inputTextBox" maxlength="100" id="txtSpcialList" />
+                        </div>
+                        <div class="chkBox1Heading">
+                            <input type='checkbox' id="chkSpcialListN" class="chkSpcialListN" />
+                        </div>
+                        <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkSpcialListCT" class="chkSpcialListCT" />
+                        </div>
+						  <div class="chkBox2Heading">
+                            <input type='checkbox' id="chkSpcialListNA" class="chkSpcialListCT" />
+                        </div>
+                    </div>
+					<div class='errorMsg'>
+						<span id="errortxtSpcialList" class="errorText" style="color: Red; display: none" />
+					</div>
+                </div>
+
+                <div class="formButtons">
+                    <button class="previous">Previous</button>
+                    <button class="next">Next</button>
+                    <!-- <input type="reset" class="reset" value="Reset Form" /> -->
+                </div>
+
+            </div>
+
+            <h3>
+                <a href="#" id="sixthSection">
+                    PROJECT DATA
+                </a>
+            </h3>
+            <div class="projectData">
+
+                <div class="displayContent">
+                    Building area &nbsp;
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="10" id="txtBuildingArea" />m2
+                    <span id="errorBuildingArea" class="errorBuildingArea" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                </div>
+
+                <div class="displayContent">
+                    Number of RIDDOR reportable accidents (over 7 day injury) &nbsp;
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="10" id="txtHealthData" />
+                    <span id="errorHealthData" class="errorBuildingArea" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                </div>
+				<div class="displayContent"></div>
+				<div class="inputContent"></div>
+                <div class="displayContent">
+                    Accident free man hours &nbsp;
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="10" id="txtAccidentFreeHours" />
+                    <span id="errorAccidentFreeHours" class="errorAccidentFreeHours" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                </div>
+
+                <div class="displayContent">
+                    Considerate Constructors Score &nbsp;
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="10" id="txtConstructorsScore" />
+                    <span id="errorConstructorsScore" class="errorConstructorsScore" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                </div>
+
+                <div class="displayContent">
+                    CCS Scheme &nbsp;
+                </div>
+                <div class="multiRadioBoxArea">
+                    <div class="inputContent">
+                        <input type="radio" id="rbCCSSchemeYes" name="rbCCSScheme" value="Yes" />Original CCS scoring (out of 40) before 2013<br />
+                        <input type="radio" id="rbCCSSchemeNo" name="rbCCSScheme" value="No" checked="checked" />CCS scoring (out of 50) after 2013<br />
+                    </div>
+                </div>
+
+                <div class="KPIs">
+                    <div class="displayContent">
+                        KPIs
+                    </div>
+                    <div class="inputContent">
+                        &nbsp;
+                    </div>
+
+                    <div class="displayContent">
+                       % deviation from cost estimate &nbsp;
+                    </div>
+                    <div class="inputContent">
+                        <input type="text" class="inputTextBox" maxlength="10" id="txtCostPredictability"
+                               title="(positive number = over budget, negative number = under budget, 0 = on budget)" />%
+                        <span id="errorCostPredictability" class="errorCostPredictability" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                    </div>
+
+                    <div class="displayContent">
+                        % deviation from time estimate &nbsp;
+                    </div>
+                    <div class="inputContent">
+                        <input type="text" class="inputTextBox" maxlength="255" id="txtTimePredictability"
+                               title="(positive number = delivered late, negative number = delivered early, 0 = delivered on programme)" />%
+                        <span id="errorTimePredictability" class="errorTimePredictability" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                    </div>
+
+                    <div class="displayContent">
+                        Defects &nbsp;
+                    </div>
+                    <div class="inputContent">
+                        <input type="text" class="inputTextBox" maxlength="10" id="txtDefects" />%
+                        <span id="errorDefects" class="errorDefects" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                    </div>
+
+                    <div class="displayContent">
+                        Client satisfaction - Product &nbsp;
+                    </div>
+                    <div class="inputContent">
+                        <input type="text" class="inputTextBox" maxlength="10" id="txtCSProduct" />%
+                        <span id="errorCSProduct" class="errorCSProduct" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                    </div>
+
+                    <div class="displayContent">
+                        Client satisfaction - Services &nbsp;
+                    </div>
+                    <div class="inputContent">
+                        <input type="text" class="inputTextBox" maxlength="10" id="txtCSService" />%
+                        <span id="errorCSService" class="errorCSService" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                    </div>
+                </div>
+
+                <div class="displayContent">
+                    Pre-Construction BREEAM/DREAM rating &nbsp;
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL" id="ddlPreConstructionRating">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <span id="errorPreConstructionRating" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="displayContent">
+                    Score &nbsp;
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="10" id="txtPreConstructionScore" />%
+                    <span id="errorPreConstructionScore" class="errorPreConstructionScore" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                </div>
+
+                <div class="displayContent">
+                    Handover BREEAM/DREAM rating &nbsp;
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL" id="ddlHandoverRating">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <span id="errorHandoverRating" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="displayContent">
+                    Score &nbsp;
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="10" id="txtHandoverScore" />%
+                    <span id="errorHandoverScore" class="errorHandoverScore" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                </div>
+				<div class="displayContent">
+                    CEEQUAL rating &nbsp;<span class="asterisk asteriskProjectData">* </span>
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL" id="ddlCEEQUALRating">
+                        <option value="default">Please select...</option>
+                    </select>
+                    
+                </div>
+				<div class='errorMsg'>
+					  <span id="errorCEEQUALRating" class="errorText" style="color: Red; display: none" />
+				</div>
+
+                <div class="displayContent">
+                    Score &nbsp;
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="10" id="txtCEEQUALScore" />%
+                    
+                </div>
+				<div class='errorMsg'>
+					  <span id="errorCEEQUALScore" class="errorCEEQUALScore" style="color: Red; display: none">* Input digits (0 - 9)</span>
+				</div>
+                <div class="spending">
+                    <div class="displayContent">
+                        Local spend (% of project spend) &nbsp;
+                    </div>
+                    <div class="inputContent">                        
+                            < 20 miles of the site                                      
+                    </div>                   
+                    <div class="inputContent">                       
+                            <input type="text" class="inputTextBox" maxlength="10" id="txt20miles" />%                                           
+                    </div>
+					 <div class="errorMsg">
+                        &nbsp;<span id="error20miles" class="error20miles" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                    </div>
+					 <div class="inputContent"> 
+                            within 40 miles of the site                       
+                    </div>                   
+                    <div class="inputContent">
+						<input type="text" class="inputTextBox" maxlength="10" id="txt40miles" />%                            
+                    </div>
+					<div class='errorMsg'>
+						<span id="error40miles" class="error40miles" style="color: Red; display: none">* Input digits (0 - 9)</span>
+					</div>
+                </div>
+
+                <div class="displayContent">
+                    Kier apprentices employed &nbsp;
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="10" id="txtKIERApprentices" />
+                    <span id="errorKIERApprentices" class="errorKIERApprentices" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                </div>
+
+                <div class="displayContent">
+                    Supply Chain Apprentices &nbsp;
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="10" id="txtSupplyChainApprentices" />
+                    <span id="errorSupplyChainApprentices" class="errorSupplyChainApprentices" style="color: Red; display: none">* Input digits (0 - 9)</span>
+                </div>
+
+                <div class="displayContent">
+                    EPC rating &nbsp;
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL" id="ddlEPCRating">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <span id="errorEPCRating" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="formButtons">
+                    <button class="previous">Previous</button>
+                    <button class="next">Next</button>
+
+                </div>
+            </div>
+			 <h3>
+                <a href="#" id="seventhSection">
+                    TESTIMONIALS
+                </a>
+            </h3>
+            <div class="testimonials">
+
+                <div class="displayContent">
+                    Are Client references available on request? <span class="asterisk" id="asteriskClientReferences">* </span>
+                </div>
+                <div class="inputContent">
+                    <input type="radio" id="rbClientReference1Yes" name="rbClientReference1" value="Yes" />Yes
+                    <input type="radio" id="rbClientReference1No" name="rbClientReference1" value="No" checked="checked" />No
+                </div>
+
+                <div class="firstTestimonals">
+
+                    <div class="displayContent">
+                        Testimonials (Client/Users/Supply Chain/Neighbours)
+                    </div>
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <textarea cols="60" rows="4" id="txtTestimonials1"></textarea>
+                        </div>
+                    </div>
+                    <div class="displayContent">
+                        Source
+                    </div>
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <textarea cols="60" rows="4" id="txtSource1"></textarea>
+                            <input type="button" value="+" class="addMore" onclick="enableSecondTestimonials()" />
+                        </div>
+                    </div>
+					<div class='documentsView'>						
+						<table id="AllfilesOfTestimonial1" class='Testimonials'><thead><tr><th>Original Testimonial</th></tr></thead></table>					
+					</div>
+                </div>
+
+                <div class="secondTestimonals" id="secondTestimonals">
+
+                    <div class="displayContent">
+                        Testimonials (Client/Users/Supply Chain/Neighbours)
+                    </div>
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <textarea cols="60" rows="4" id="txtTestimonials2"></textarea>
+                        </div>
+                    </div>
+                    <div class="displayContent">
+                        Source
+                    </div>
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <textarea cols="60" rows="4" id="txtSource2"></textarea>
+                            <input type="button" value="+" class="addMore" onclick="enableThirdTestimonials()" />
+                        </div>
+                    </div>
+					<div class='documentsView'>						
+						<table id="AllfilesOfTestimonial2" class='Testimonials'><thead><tr><th>Original Testimonial</th></tr></thead></table>					
+					</div>
+                </div>
+
+                <div class="thirdTestimonals" id="thirdTestimonals">
+
+                    <div class="displayContent">
+                        Testimonials (Client/Users/Supply Chain/Neighbours)
+                    </div>
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <textarea cols="60" rows="4" id="txtTestimonials3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="displayContent">
+                        Source
+                    </div>
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <textarea cols="60" rows="4" id="txtSource3"></textarea>
+                            <input type="button" value="+" class="addMore" onclick="enableFourthTestimonials()" />
+                        </div>
+                    </div>
+					<div class='documentsView'>						
+						<table id="AllfilesOfTestimonial3" class='Testimonials'><thead><tr><th>Original Testimonial</th></tr></thead></table>					
+					</div>
+                </div>
+
+                <div class="fourthTestimonals" id="fourthTestimonals">
+
+                    <div class="displayContent">
+                        Testimonials (Client/Users/Supply Chain/Neighbours)
+                    </div>
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <textarea cols="60" rows="4" id="txtTestimonials4"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="displayContent">
+                        Source
+                    </div>
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <textarea cols="60" rows="4" id="txtSource4"></textarea>
+                            <input type="button" value="+" class="addMore" onclick="enableFifthTestimonials()" />
+                        </div>
+                    </div>
+					<div class='documentsView'>						
+						<table id="AllfilesOfTestimonial4" class='Testimonials'><thead><tr><th>Original Testimonial</th></tr></thead></table>					
+					</div>
+                </div>
+
+                <div class="fifthTestimonals" id="fifthTestimonals">
+
+                    <div class="displayContent">
+                        Testimonials (Client/Users/Supply Chain/Neighbours)
+                    </div>
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <textarea cols="60" rows="4" id="txtTestimonials5"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="displayContent">
+                        Source
+                    </div>
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <textarea cols="60" rows="4" id="txtSource5"></textarea>
+                        </div>
+                    </div>
+					<div class='documentsView'>						
+						<table id="AllfilesOfTestimonial5" class='Testimonials'><thead><tr><th>Original Testimonial</th></tr></thead></table>					
+					</div>
+                </div>				
+                <div class="formButtons">
+                    <button class="previous">Previous</button>
+                    <button class="next">Next</button>
+                </div>
+            </div>
+
+            <h3>
+                <a href="#" id="eighthSection">
+                    AWARDS & LINK TO KIER ALBUM
+                </a>
+            </h3>
+            <div class="awards">
+                <div class="firstAward">
+                    <div class="displayContent">
+                        Awards (Please provide brief summary)
+                    </div>
+
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <textarea cols="60" rows="4" id="txtAwards1"></textarea>
+                            <input type="button" value="+" class="addMore" onclick="enableSecondAward()" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="secondAward" id="secondAward">
+                    <div class="displayContent">
+                        Awards (Please provide brief summary)
+                    </div>
+
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <div>
+                                <textarea cols="60" rows="4" id="txtAwards2"></textarea>
+                                <input type="button" value="+" class="addMore" onclick="enableThirdAward()" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="thirdAward" id="thirdAward">
+                    <div class="displayContent">
+                        Awards (Please provide brief summary)
+                    </div>
+
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <div>
+                                <textarea cols="60" rows="4" id="txtAwards3"></textarea>
+                                <input type="button" value="+" class="addMore" onclick="enableFourthAward()" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fourthAward" id="fourthAward">
+                    <div class="displayContent">
+                        Awards (Please provide brief summary)
+                    </div>
+
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <div>
+                                <textarea cols="60" rows="4" id="txtAwards4"></textarea>
+                                <input type="button" value="+" class="addMore" onclick="enableFifthAward()" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fifthAward" id="fifthAward">
+                    <div class="displayContent">
+                        Awards (Please provide brief summary)
+                    </div>
+
+                    <div class="multilineTextArea">
+                        <div class="inputContent">
+                            <div>
+                                <textarea cols="60" rows="4" id="txtAwards5"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+				<div class="ImageLibLink">
+                    <div class="displayContent">
+                        Link to KIER album( Please copy & paste link to image library stored on the KIER album )
+                    </div>
+
+                    <div class="multilineTextArea">
+                        <div class="inputContent" style=" margin-top: 8px; ">
+								<a id="txtImageLibLink" href='#' target='_blank'/>
+                            <!-- <textarea cols="60" rows="4" id="txtImageLibLink"></textarea>                             -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="formButtons">
+                    <button class="previous">Previous</button>
+					 <button class="next">Next</button>
+                </div>
+            </div>
+            <h3>
+                <a href="#" id="ninthSection">
+                    EVIDENCE BITE
+                </a>
+            </h3>
+            <div class="evidenceBiteInfo">
+                <div class="displayContent">
+                    Evidence Project Stage <span class="asterisk" id="asteriskEPS">* </span>
+                </div>
+                <div class="multiCheckBoxArea">
+                    <div class="inputContent">
+                        <div>
+                            <div id="chkBoxEPSGroup" class="chkBoxEPSGroup">
+                                <div id="chkEPSLeft" class="chkEPSLeft"></div>
+                                <div id="chkEPSRight" class="chkEPSRight"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <span id="errorEPS" class="errorText" style="color: Red; display: none" />
+                        </div>
+                    </div>
+                </div>
+                <div class="displayContent">
+                    Evidence Bite example &nbsp;
+                </div>
+                <div class="inputContent">
+                    <a id="example" href="#">
+                        See completed example.
+                    </a>
+                </div>
+                <div class="evidenceExample">
+                    <div class="displayContent">
+                        <u>Business Function</u>: &nbsp;
+                    </div>
+                    <div class="inputContent">Project Delivery Delivering Value for Money</div>
+                    <div class="displayContent">
+                        <u>Topic</u>:&nbsp;
+                    </div>
+                    <div class="inputContent">Value Management</div>
+                    <div class="displayContent">
+                        <u>Category</u>:&nbsp;
+                    </div>
+                    <div class="inputContent">
+                        Delivering value for money through design
+                    </div>
+                    <div class="displayContent">
+                        &nbsp;
+                    </div>
+                    <div class="detailedInfo">
+                        <div class="inputContent">
+                            <u>Headline</u>:<br />
+                            Kier supported NHS South Gloucestershire PCT to achieve scheme
+                            affordability during the development of Yate Community Health and Children&#39;s Centre.<br />
+                            <u>Description (who, what, when)</u>:<br />
+                            Our Design Manager facilitated an early Value Management workshop with key stakeholders,
+                            to prioritise their operational needs. Using the Paired Objectives Technique to compare
+                            user objectives, we identified that separate receptions were a low priority for service managers.
+                            Our new design solution improved space efficiency by establishing a shared waiting area,
+                            rather than 3 separate areas. We also benchmarked room utilisation against historic patient throughput,
+                            leading to the development of flexible use treatment/consulting rooms, to increase space utilisation.<br />
+                            <u>Benefits (outcomes)</u>:
+                            <br />
+                            Without compromising clinical compliance or functionality we reduced building area from 3600m2 to 2700m2, and saved the client &pound;2.2m, ensuring business case approval first time by the SHA.<br />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="displayContent">
+                    Business Functions <span class="asterisk">* </span>
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL" id="ddlBusinessFunctions">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <span id="errorBusinessFunctions" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="displayContent">
+                    Topic <span class="asterisk">* </span>
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL EBdropDown" id="ddlTopic">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <span id="errorTopic" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div id="categories">
+                    <div class="displayContent">
+                        Category 1
+                    </div>
+                    <div class="inputContent">
+                        <select class="inputDDL" id="ddlCategory1">
+                            <option value="default">Please select...</option>
+                        </select>
+                        <span id="errorCategory1" class="errorText" style="color: Red; display: none" />
+                    </div>
+
+                    <div class="displayContent">
+                        Category 2
+                    </div>
+                    <div class="inputContent">
+                        <select class="inputDDL" id="ddlCategory2">
+                            <option value="default">Please select...</option>
+                        </select>
+                        <span id="errorCategory2" class="errorText" style="color: Red; display: none" />
+                    </div>
+                </div>
+                <div class="section">
+                    <div class="displayContent">
+                        Evidence Bite  &nbsp;
+                    </div>
+                    <div class="inputContent">
+                        <div class="description">
+                            Heading <span class="asterisk">* </span>
+                        </div>
+                        <div class="description">
+                            <input type="text" class="inputTextBox" maxlength="255" id="txtHeading" />
+                        </div>
+                        <div class="description">
+                            <span id="errorHeading" class="errorText" style="color: Red; display: none" />
+                        </div>
+                    </div>
+
+                    <div class="displayContent">
+                        &nbsp
+                    </div>
+                    <div class="inputContent">
+                        <div class="description">
+                            Description (Who/What/When/How) <span class="asterisk">* </span>
+                        </div>
+                        <div class="description">
+                            <textarea cols="60" rows="4" id="txtDescription"></textarea>
+                        </div>
+                        <div class="description">
+                            <span id="errorDescription" class="errorText" style="color: Red; display: none" />
+                        </div>
+                    </div>
+                    <div class="displayContent">
+                        &nbsp
+                    </div>
+                    <div class="inputContent">
+                        <div class="description">
+                            Benefits (Outcomes/Client benefits) <span class="asterisk">* </span>
+                        </div>
+                        <div class="description">
+                            <textarea cols="60" rows="4" id="txtBenefits"></textarea>
+                        </div>
+                        <div class="description">
+                            <span id="errorBenefits" class="errorText" style="color: Red; display: none" />
+                        </div>
+                    </div>
+                </div>
+               <div class="formButtons">
+					<button class="previous">Previous</button>
+				</div>
+            </div>
+			
+        </div>
+		 <div class="formButtons">
+                  
+
+                    <input type="button" class="submit" value="Save" onclick="return ValidateForm();" />
+
+                </div>
+    </div>
+</div><html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">Gattu, Srikanth</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">Gattu, Srikanth</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:Order msdt:dt="string">3521800.00000000</mso:Order>
+<mso:TemplateUrl msdt:dt="string"></mso:TemplateUrl>
+<mso:xd_ProgID msdt:dt="string"></mso:xd_ProgID>
+<mso:_SourceUrl msdt:dt="string"></mso:_SourceUrl>
+<mso:_SharedFileIndex msdt:dt="string"></mso:_SharedFileIndex>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+<title></title></head>

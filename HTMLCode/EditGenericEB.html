@@ -1,0 +1,637 @@
+﻿<!--SharePoint Script and CSS Files -->
+<script type="text/javascript" src="/_layouts/15/MicrosoftAjax.js"></script>
+<script type="text/javascript" src="/_layouts/15/init.js"></script>
+
+<script type="text/javascript" src="/_layouts/15/sp.runtime.js"></script>
+<script type="text/javascript" src="/_layouts/15/sp.js"></script>
+<script type="text/javascript" src="/_layouts/15/sp.taxonomy.js"></script>
+
+<!--Custom Script and CSS Files -->
+<link href="../../Style%20Library/EvidenceDB/CSS/jquery-ui.min.css" rel="stylesheet" />
+<script src="../../Style%20Library/EvidenceDB/Scripts/jquery-1.11.1.min.js"></script>
+<script src="../../Style%20Library/EvidenceDB/Scripts/jquery-ui.min.js"></script>
+<link href="../../Style%20Library/EvidenceDB/CSS/EvidenceDB.css" rel="stylesheet" />
+<script src="../../Style%20Library/EvidenceDB/Scripts/Taxonomy.js"></script>
+
+<script src="../../Style%20Library/EvidenceDB/Scripts/EditEvidenceBite.js"></script>
+<script src="../../Style%20Library/EvidenceDB/Scripts/EditEBSubmit.js"></script>
+<script src="../../Style%20Library/EvidenceDB/Scripts/EBValidations.js"></script>
+<script src="../../Style%20Library/EvidenceDB/Scripts/ErrorLog.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $("#accordion").accordion({
+            header: "h3",
+            collapsible: true,
+            heightStyle: "content",
+            navigation: false
+        });
+         //to below script is used to get focused in the control on according click        
+	$("h3.ui-accordion-header").click(function(){
+		var isControlFocused=false;//This variable is used to stop iteration of loop once control is focused.
+			
+			$(this).nextAll('div').first().find('div').each(function(){
+				 	$(this).each(function()
+								{
+										if(!isControlFocused)
+										{
+											$(this).find('input,select,textarea').each(function()
+													{	
+														if(typeof($(this).attr('type'))!=='undefined' && $(this).attr('readonly')!='readonly')
+															{
+																if($(this).val()=='Get User' && $(this).attr('type')=='button')
+																{
+																	$(this).focus();
+																	isControlFocused=true;															
+																	return false;
+																}
+																else if( $(this).attr('type')!='button')
+																{
+																	$(this).focus();
+																	isControlFocused=true;															
+																	return false;
+																}
+
+			
+															}
+														else if( ($(this)[0].tagName=='select'||$(this)[0].tagName=='TEXTAREA' )&& $(this).attr('disabled')!='disabled')
+														{
+																$(this).focus();
+																isControlFocused=true;
+																return false;
+			
+														}		
+													});	
+												return false;								
+											}	
+									});
+							});
+								
+				});        
+		$('#accordion button').click(function (e) {
+            e.preventDefault();
+            var delta = ($(this).is('.next') ? 1 : -1);
+
+            if (delta == 1) {
+                switch ($('#accordion').accordion('option', 'active') + delta) {
+                    case 1:
+                        if (ValidateAuthorSection())
+                            $('#accordion').accordion('option', 'active', ($('#accordion').accordion('option', 'active') + delta));
+                        break;
+                    case 2:
+                        if (ValidateProjectInfo()) {
+                            $('#accordion').accordion('option', 'active', ($('#accordion').accordion('option', 'active') + delta));
+                        }
+                        break;
+                }
+            }
+            else {
+                $('#accordion').accordion('option', 'active', ($('#accordion').accordion('option', 'active') + delta));
+            }
+
+        });
+    });
+</script>
+
+<script type="text/javascript">
+    //variables declaration
+    var userName = null,
+        user,
+        context,
+        session,
+        evidenceBiteID,
+        listItem,
+        listGenericEvidenceBite = 'Generic Evidence Bite',
+        termStore,
+        groups,
+        termSets,
+        terms,
+        termSetEnumerator,
+        selectedArea,
+        selectedSector,
+        selectedSector1,
+        selectedSector2,
+        selectedBusiness,
+        selectedTopic,
+        areaValue,
+        locationValue,
+        subSectorValue1,
+        subSectorValue2,
+        subSectorValue3,
+        topicValue,
+        categoriesValue,
+        peoplePickerUser,
+        isLocationSpecific = true,
+        isSectorSpecific = true,
+        isSecondSectorEnable = false,
+        isThirdSectorEnable = false,
+        isCategoriesEnable = false,
+        hasAreas = true,
+        hasLocations = true,
+        successMessage;
+
+    //variables for Controls
+    var chkBoxEPSGroup,
+        chkEPSLeft,
+        chkEPSRight,
+        ddlRegion,
+        ddlArea,
+        ddlLocation,
+        ddlSector,
+        ddlSubSector,
+        ddlSector1,
+        ddlSubSector1,
+        ddlSector2,
+        ddlSubSector2,
+        ddlBusinessFunctions,
+        ddlTopic,
+        ddlCategory1,
+        ddlCategory2;
+
+    var defaultOption = $("<option/>");
+    defaultOption.attr("value", 'default').text('Please select...');
+
+    //Hard-coded variables initialization
+    var siteUrl = '',
+        listEvidenceBite = 'Generic Evidence Bite',
+        taxonomyGroupName = 'Construction',
+        tsNameLocations = 'Geographic Locations',
+        locationsTerms,
+        tsLocations,
+        tsAreas,
+        tsSelectedLocation,
+        areasTermSet,
+        locationTermSet,
+        areasTerms,
+        locationTerms,
+        tsNameSector = 'Sector',
+        tsSector,
+        sectorsTerms,
+        sectorTerms1,
+        sectorTerms2,
+        sectorsTermSet,
+        sectorsTermSet1,
+        sectorsTermSet2,
+        sectorTerms,
+        tsNameEvidenceStage = 'Evidence Project Stage',
+        epsTerms,
+        tsNameBusinessFunction = 'Business Functions',
+        businessTerms,
+        tsBusinessFunctions,
+        businessFunctionTermSet,
+        topicTerms,
+        tsTopic,
+        categoriesTermSet,
+        categoryTerms,
+        tsCategory;
+
+    $(document).ready(
+        function () {
+
+            //fetching Controls to bind data
+            ddlRegion = $('#ddlRegion');
+            ddlArea = $('#ddlArea');
+            ddlLocation = $('#ddlLocation');
+            ddlSector = $('#ddlSector');
+            ddlSubSector = $('#ddlSubSector');
+            ddlSector1 = $('#ddlSector1');
+            ddlSubSector1 = $('#ddlSubSector1');
+            ddlSector2 = $('#ddlSector2');
+            ddlSubSector2 = $('#ddlSubSector2');
+            chkBoxEPSGroup = $('#chkBoxEPSGroup');
+            chkEPSLeft = $('#chkEPSLeft');
+            chkEPSRight = $('#chkEPSRight');
+            ddlBusinessFunctions = $('#ddlBusinessFunctions');
+            ddlTopic = $('#ddlTopic');
+            ddlCategory1 = $('#ddlCategory1');
+            ddlCategory2 = $('#ddlCategory2');
+
+            // To Enable and disable 'Evidence Bite Example' DIV
+            $('#example').click(function () {
+                if ($('.evidenceExample').css('display') == 'none') {
+                    $('.evidenceExample').css('display', 'block');
+                    $("#example").text("Hide completed example.");
+                }
+                else {
+                    $('.evidenceExample').css('display', 'none');
+                    $("#example").text("See completed example.");
+                }
+            });
+
+            //Redirecting the user to Add-Data.aspx Page on 'Cancel' button click in LIST FORMS.
+            $('input[value=Cancel]').click(function () {
+                window.location.replace("/Pages/Add-Data.aspx");
+            });
+
+            // Validation for Location Specification
+            $("input[name=rbIsNonLocationSpecific]:radio").change(function () {
+                if ($(this).val() == "Yes") {
+                    $('#locationInfo').hide();
+                    isLocationSpecific = false;
+                }
+                else {
+                    $('#locationInfo').show();
+                    isLocationSpecific = true;
+                }
+            });
+
+            // Validation for Sector Specification
+            $("input[name=rbIsNonSectorSpecific]:radio").change(function () {
+                if ($(this).val() == "Yes") {
+                    $('#sectorInfo').hide();
+                    isSectorSpecific = false;
+                }
+                else {
+                    $('#sectorInfo').show();
+                    isSectorSpecific = true;
+                }
+            });
+
+            //================================================== [ Change Events to Hide Validation error Message ]
+            $(document).on('change', function () {
+                $(".errorText").css("display", "none");
+            });
+            //================================================== [ Change Events to Hide Validation error Message ]
+
+            context = new SP.ClientContext.get_current();
+            var web = context.get_web();
+            session = SP.Taxonomy.TaxonomySession.getTaxonomySession(context);
+            termStore = session.getDefaultSiteCollectionTermStore();
+
+            context.load(session);
+            context.load(termStore);
+            context.load(web);
+
+            //To get logged in User Name
+            user = web.get_currentUser();
+            user.retrieve();
+
+            context.executeQueryAsync(onTaxonomySession, onTaxonomyFailed);
+        });
+</script>
+
+<script type="text/javascript">
+    window.alert = function (message) {
+        $(document.createElement('div'))
+            .attr({ 'class': 'alert' })
+            .html(message)
+            .dialog({
+                buttons: {
+                    OK: function () {
+                        $(this).dialog('close');
+                        $(".v4master").css("overflow-y", "auto");
+                    }
+                },
+                close: function () {
+                    $(this).remove();
+                    $(".v4master").css("overflow-y", "auto");
+                },
+                draggable: false,
+                modal: true,
+                resizable: false,
+                width: 'auto',
+
+            });
+
+        $(".alert").parent().addClass("dummyclass");
+        $(".dummyclass").addClass("popupfixing");
+
+    };
+    window.confirm = function (message) {
+        $(document.createElement('div'))
+            .attr({ 'class': 'confirm' })
+            .html(message)
+            .dialog({
+                resizable: false,
+                width: 'auto',
+                modal: true,
+                buttons: {
+                    OK: function () {
+                        location.reload();
+                    },
+                    Cancel: function () {
+                        $(this).dialog("close");
+                        window.location.replace("/Pages/Add-Data.aspx");
+                    }
+                }
+            });
+
+        $(".confirm").parent().addClass("dummyclass");
+        $(".dummyclass").addClass("popupfixing");
+    };
+</script>
+
+<div class="formBody">
+    <div class="formContent">
+        <div class="asteriskInfo">Mandatory information is marked with an asterisk(<span class="asterisk">*</span>).</div>
+        <div id="accordion">
+            <h3>
+                <a href="#" id="firstSection">
+                    AUTHOR
+                </a>
+            </h3>
+            <div class="projectAuthor">
+                <div class="displayContent">
+                    Author (Best Practice Champion)
+                </div>
+                <div class="inputContent">
+                    <input type="text" class="inputTextBox" maxlength="255" id="txtAuthor" readonly="readonly" />
+                </div>
+
+                <div class="displayContent">
+                    Applicable to all locations
+                </div>
+                <div class="inputContent">
+                    <input type="radio" id="rbIsNonLocationSpecificYes" name="rbIsNonLocationSpecific" value="Yes" />Yes
+                    <input type="radio" id="rbIsNonLocationSpecificNo" name="rbIsNonLocationSpecific" checked="checked" value="No" />No
+                </div>
+
+
+                <div class="location" id="locationInfo">
+                    <div class="displayContent">
+                        <div class="mainHeading">
+                            Project location <span class="asterisk">* </span>
+                        </div>
+                    </div>
+                    <div class="inputContent">
+                        <span id="errorProjectLocation" class="errorText" style="color: Red; display: none" />
+                    </div>
+
+                    <div class="displayContent">
+                    </div>
+                    <div class="inputContent">
+                        <div class="locationContent">Geographical Region</div>
+                        <div class="locationValue">
+                            <select class="inputDDL" id="ddlRegion">
+                                <option value="default">Please select...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="secondHeading">
+                        <div class="displayContent">
+                        </div>
+                        <div class="inputContent">
+                            <div class="locationContent">Area</div>
+                            <div class="locationValue">
+                                <select class="inputDDL" id="ddlArea">
+                                    <option value="default">Please select...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="thirdHeading">
+                        <div class="displayContent">
+                        </div>
+                        <div class="inputContent">
+                            <div class="locationContent">Location</div>
+                            <div class="locationValue">
+                                <select class="inputDDL" id="ddlLocation">
+                                    <option value="default">Please select...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="displayContent">
+                    Application to all sectors
+                </div>
+                <div class="inputContent">
+
+                    <input type="radio" id="rbIsNonSectorSpecificYes" name="rbIsNonSectorSpecific" value="Yes" />Yes
+                    <input type="radio" id="rbIsNonSectorSpecificNo" name="rbIsNonSectorSpecific" checked="checked" value="No" />No
+
+                </div>
+
+                <div class="sectorInfo" id="sectorInfo">
+                    <div class="displayContent">
+                        Sector <span class="asterisk">* </span>
+                    </div>
+                    <div class="inputContent">
+                        <select class="inputDDL" id="ddlSector">
+                            <option value="default">Please select...</option>
+                        </select>
+                        <select class="inputDDL" id="ddlSubSector">
+                            <option value="default">Please select...</option>
+                        </select>
+                        <input type="button" value="+" class="addMore" onclick="enableSecondSector()" />
+                    </div>
+
+                    <div class="sector2" id="sector2">
+                        <div class="displayContent">
+                            Select second sector and sub-sector
+                        </div>
+                        <div class="inputContent">
+                            <select class="inputDDL" id="ddlSector1">
+                                <option value="default">Please select...</option>
+                            </select>
+                            <select class="inputDDL" id="ddlSubSector1">
+                                <option value="default">Please select...</option>
+                            </select>
+                            <input type="button" value="+" class="addMore" onclick="enableThirdSector()" />
+                        </div>
+                    </div>
+
+                    <div class="sector3" id="sector3">
+
+                        <div class="displayContent">
+                            Select third Sector and Sub-Sector
+                        </div>
+                        <div class="inputContent">
+                            <select class="inputDDL" id="ddlSector2">
+                                <option value="default">Please select...</option>
+                            </select>
+                            <select class="inputDDL" id="ddlSubSector2">
+                                <option value="default">Please select...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="formButtons">
+                    <button class="next">Next</button>
+
+                </div>
+            </div>
+
+            <h3>
+                <a href="#" id="secondSection">
+                    EVIDENCE BITE
+                </a>
+            </h3>
+            <div class="evidenceBiteInfo">
+                <div class="displayContent">
+                    Evidence Project Stage <span class="asterisk" id="asteriskEPS">* </span>
+                </div>
+                <div class="multiCheckBoxArea">
+                    <div class="inputContent">
+                        <div>
+                            <div id="chkBoxEPSGroup" class="chkBoxEPSGroup">
+                                <div id="chkEPSLeft" class="chkEPSLeft"></div>
+                                <div id="chkEPSRight" class="chkEPSRight"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <span id="errorEPS" class="errorText" style="color: Red; display: none" />
+                        </div>
+                    </div>
+                </div>
+                <div class="displayContent">
+                    Evidence Bite example &nbsp;
+                </div>
+                <div class="inputContent">
+                    <a id="example" href="#">
+                        See completed example.
+                    </a>
+                </div>
+                <div class="evidenceExample">
+                    <div class="displayContent">
+                        <u>Business Function</u>: &nbsp;
+                    </div>
+                    <div class="inputContent">Project Delivery Delivering Value for Money</div>
+                    <div class="displayContent">
+                        <u>Topic</u>:&nbsp;
+                    </div>
+                    <div class="inputContent">Value Management</div>
+                    <div class="displayContent">
+                        <u>Category</u>:&nbsp;
+                    </div>
+                    <div class="inputContent">
+                        Delivering value for money through design
+                    </div>
+                    <div class="displayContent">
+                        &nbsp;
+                    </div>
+                    <div class="detailedInfo">
+                        <div class="inputContent">
+                            <u>Headline</u>:<br />
+                            Kier supported NHS South Gloucestershire PCT to achieve scheme
+                            affordability during the development of Yate Community Health and Children&#39;s Centre.<br />
+                            <u>Description (who, what, when)</u>:<br />
+                            Our Design Manager facilitated an early Value Management workshop with key stakeholders,
+                            to prioritise their operational needs. Using the Paired Objectives Technique to compare
+                            user objectives, we identified that separate receptions were a low priority for service managers.
+                            Our new design solution improved space efficiency by establishing a shared waiting area,
+                            rather than 3 separate areas. We also benchmarked room utilisation against historic patient throughput,
+                            leading to the development of flexible use treatment/consulting rooms, to increase space utilisation.<br />
+                            <u>Benefits (outcomes)</u>:
+                            <br />
+                            Without compromising clinical compliance or functionality we reduced building area from 3600m2 to 2700m2, and saved the client &pound;2.2m, ensuring business case approval first time by the SHA.<br />
+                        </div>
+                    </div>
+                </div>
+                <div class="displayContent">
+                    Business Functions <span class="asterisk">* </span>
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL" id="ddlBusinessFunctions">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <span id="errorBusinessFunctions" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div class="displayContent">
+                    Topic <span class="asterisk">* </span>
+                </div>
+                <div class="inputContent">
+                    <select class="inputDDL EBdropDown" id="ddlTopic">
+                        <option value="default">Please select...</option>
+                    </select>
+                    <span id="errorTopic" class="errorText" style="color: Red; display: none" />
+                </div>
+
+                <div id="categories">
+                    <div class="displayContent">
+                        Category 1<span class="asterisk">* </span>
+                    </div>
+                    <div class="inputContent">
+                        <select class="inputDDL" id="ddlCategory1">
+                            <option value="default">Please select...</option>
+                        </select>
+                        <span id="errorCategory1" class="errorText" style="color: Red; display: none" />
+                    </div>
+
+                    <div class="displayContent">
+                        Category 2<span class="asterisk">* </span>
+                    </div>
+                    <div class="inputContent">
+                        <select class="inputDDL" id="ddlCategory2">
+                            <option value="default">Please select...</option>
+                        </select>
+                        <span id="errorCategory2" class="errorText" style="color: Red; display: none" />
+                    </div>
+                </div>
+                <div class="section">
+                    <div class="displayContent">
+                        Evidence Bite &nbsp;
+                    </div>
+                    <div class="inputContent">
+                        <div class="description">
+                            Heading <span class="asterisk">* </span>
+                        </div>
+                        <div class="description">
+                            <input type="text" class="inputTextBox" maxlength="255" id="txtHeading" />
+                        </div>
+                        <div class="description">
+                            <span id="errorHeading" class="errorText" style="color: Red; display: none" />
+                        </div>
+                    </div>
+
+                    <div class="displayContent">
+                        &nbsp
+                    </div>
+                    <div class="inputContent">
+                        <div class="description">
+                            Description (Who/What/When/How) <span class="asterisk">* </span>
+                        </div>
+                        <div class="description">
+                            <textarea cols="60" rows="4" id="txtDescription"></textarea>
+                        </div>
+                        <div class="description">
+                            <span id="errorDescription" class="errorText" style="color: Red; display: none" />
+                        </div>
+                    </div>
+                    <div class="displayContent">
+                        &nbsp
+                    </div>
+                    <div class="inputContent">
+                        <div class="description">
+                            Benefits (Outcomes/Client benefits) <span class="asterisk">* </span>
+                        </div>
+                        <div class="description">
+                            <textarea cols="60" rows="4" id="txtBenefits"></textarea>
+                        </div>
+                        <div class="description">
+                            <span id="errorBenefits" class="errorText" style="color: Red; display: none" />
+                        </div>
+                    </div>
+                </div>
+                <div class="formButtons">
+                    <button class="previous">Previous</button>
+				</div>
+            </div>
+        </div>
+		 <div class="formButtons">
+                  
+                    <input type="button" class="submit" value="Save" onclick="return ValidateForm();" />
+                </div>
+    </div>
+</div><html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">Gattu, Srikanth</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">Gattu, Srikanth</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:Order msdt:dt="string">3522400.00000000</mso:Order>
+<mso:TemplateUrl msdt:dt="string"></mso:TemplateUrl>
+<mso:xd_ProgID msdt:dt="string"></mso:xd_ProgID>
+<mso:_SourceUrl msdt:dt="string"></mso:_SourceUrl>
+<mso:_SharedFileIndex msdt:dt="string"></mso:_SharedFileIndex>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+<title></title>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
