@@ -20,7 +20,7 @@
 <script src="/Scripts/PDValidations.js"></script>
 <script src="/Scripts/ErrorLog.js"></script>
 <script src="/Scripts/UploadDocument.js"></script>
-<script type="text/javascript" src="/_layouts/15/sp.DocumentManagement.debug.js"></script>
+<!-- <script type="text/javascript" src="/_layouts/15/sp.DocumentManagement.debug.js"></script> -->
 <script src="/Scripts/WorkingOnIt.js"></script>
 <script type="text/javascript">
     $(function () {
@@ -666,11 +666,11 @@
             //================================================== [ Handover BREEAM/DREAM - Score ]
             $("#txtHandoverScore").bind("keypress", function (e) {
 			
-				<!--   var keyCode = e.which ? e.which : e.keyCode -->
-				<!--    var ret = ((keyCode >= 48 && keyCode <= 57) || specialKeys.indexOf(keyCode) != -1); -->				
-				<!--    $("#errorHandoverScore").css("display", ret ? "none" : "inline"); -->
-                <!-- $("#errorHandoverScore").text('* Input digits (0 - 9).'); -->
-                <!-- return ret; -->
+				// <!--   var keyCode = e.which ? e.which : e.keyCode -->
+				// <!--    var ret = ((keyCode >= 48 && keyCode <= 57) || specialKeys.indexOf(keyCode) != -1); -->				
+				// <!--    $("#errorHandoverScore").css("display", ret ? "none" : "inline"); -->
+                // <!-- $("#errorHandoverScore").text('* Input digits (0 - 9).'); -->
+                // <!-- return ret; -->
 				/*var text = $(this).val();
 				if ((text.indexOf('.') != -1) && (text.substring(text.indexOf('.')).length > 2)) {
 						//e.preventDefault();
@@ -775,26 +775,26 @@
             //================================================== [ Supply Chain Apprentices ]
 
             //#endregion
-
-            context = new SP.ClientContext.get_current();
-            var web = context.get_web();
-            session = SP.Taxonomy.TaxonomySession.getTaxonomySession(context);
-            termStore = session.getDefaultSiteCollectionTermStore();
+// disabled on local dev
+            // context = new SP.ClientContext.get_current();
+            // var web = context.get_web();
+            // session = SP.Taxonomy.TaxonomySession.getTaxonomySession(context);
+            // termStore = session.getDefaultSiteCollectionTermStore();
 
             // To Get Internal JV field (choice field values) from the Site Column using 'Project Datasheet' List
-            pdList = web.get_lists().getByTitle(listProjectDatasheet);
-            internalJVField = context.castTo(pdList.get_fields().getByInternalNameOrTitle("Internal JV"), SP.FieldChoice);
+            // pdList = web.get_lists().getByTitle(listProjectDatasheet);
+            // internalJVField = context.castTo(pdList.get_fields().getByInternalNameOrTitle("Internal JV"), SP.FieldChoice);
 
             //To get logged in User Name
-            user = web.get_currentUser();
-            user.retrieve();
+            // user = web.get_currentUser();
+            // user.retrieve();
 
-            context.load(session);
-            context.load(termStore);
-            context.load(web);
-            context.load(internalJVField);
+            // context.load(session);
+            // context.load(termStore);
+            // context.load(web);
+            // context.load(internalJVField);
 
-            context.executeQueryAsync(onTaxonomySession, onTaxonomyFailed);
+            // context.executeQueryAsync(onTaxonomySession, onTaxonomyFailed);
 			
 			//Added on 13-04-2015 for external JV  section
 			//ddlExternalJV;externalDiv
@@ -875,6 +875,10 @@
                 <div class="inputContent">
                     <select class="inputDDL" id="ddlStageOfProject">
                         <option value="default">Please select...</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
                     </select>
                     <span id="errorStageOfProject" class="errorText" style="color: Red; display: none" />
                 </div>
@@ -935,6 +939,10 @@
                 <div class="inputContent">
                     <select class="inputDDL" id="ddlDeliveryRegion">
                         <option value="default">Please select...</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
                     </select>
                     <span id="errorDeliveryRegion" class="errorText" style="color: Red; display: none" />
                 </div>
@@ -964,6 +972,10 @@
                 <div class="inputContent">
                     <select class="inputDDL" id="ddlInternalJV">
                         <option value="default">Please select...</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
                     </select>
                     <span id="errorInternalJV" class="errorText" style="color: Red; display: none" />
                 </div>
@@ -986,6 +998,10 @@
                         <div class="locationValue">
                             <select class="inputDDL" id="ddlRegion">
                                 <option value="default">Please select...</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
                             </select>
                         </div>
                     </div>
@@ -998,6 +1014,10 @@
                             <div class="locationValue">
                                 <select class="inputDDL" id="ddlArea">
                                     <option value="default">Please select...</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
                                 </select>
                             </div>
                         </div>
@@ -1010,6 +1030,10 @@
                             <div class="locationValue">
                                 <select class="inputDDL" id="ddlLocation">
                                     <option value="default">Please select...</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
                                 </select>
                             </div>
                         </div>
@@ -1024,9 +1048,17 @@
                 <div class="inputContent">
                     <select class="inputDDL" id="ddlSector">
                         <option value="default">Please select...</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
                     </select>
                     <select class="inputDDL" id="ddlSubSector">
                         <option value="default">Please select...</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
                     </select>
                     <input type="button" value="+" class="addMore" onclick="enableSecondSector()" />
                 </div>
@@ -1038,9 +1070,17 @@
                     <div class="inputContent">
                         <select class="inputDDL" id="ddlSector1">
                             <option value="default">Please select...</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
                         </select>
                         <select class="inputDDL" id="ddlSubSector1">
                             <option value="default">Please select...</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
                         </select>
                         <input type="button" value="+" class="addMore" onclick="enableThirdSector()" />
                     </div>
@@ -1056,9 +1096,17 @@
                     <div class="inputContent">
                         <select class="inputDDL" id="ddlSector2">
                             <option value="default">Please select...</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
                         </select>
                         <select class="inputDDL" id="ddlSubSector2">
                             <option value="default">Please select...</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
                         </select>
                     </div>
 					<div style="clear: both;padding-bottom: 16px;"></div>
@@ -1070,7 +1118,11 @@
 						</div>
 						<div class="inputContent ddlFundingSector">
 							<select class="inputDDL ddlFundingSector" id='ddlFundingSector'>
-								<option value="default">Please select...</option>
+                                <option value="default">Please select...</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
 							</select><input type="button" value="+" class="addMore" id='addMoreFundingSectors'  />
 							<span class="errorText errorDdlFundingSector" style="color: Red; display: none" />
 						</div>
@@ -1083,10 +1135,18 @@
                 <div>
 	                <div class="inputContent">
 	                    <select class="inputDDL" id="ddlProcurement">
-	                        <option value="default">Please select...</option>
+                            <option value="default">Please select...</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
 	                    </select>
 	                    <select class="inputDDL" id="ddlSubProcurement">
-	                        <option value="default">Please select...</option>
+                            <option value="default">Please select...</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
 	                    </select>
 	                    
 	                </div>
@@ -1112,7 +1172,11 @@
 	                </div>
 	                <div class="inputContent">
 	                    <select class="inputDDL dropdown" id="ddlContract">
-	                        <option value="default">Please select...</option>
+                            <option value="default">Please select...</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
 	                    </select>
 	                   
 	                </div>
@@ -1129,6 +1193,10 @@
                 <div class="inputContent">
                     <select class="inputDDL dropdown" id="ddlAppointment">
                         <option value="default">Please select...</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
                     </select>                  
                 </div>
 				<div class='errorMsg'>
@@ -1339,7 +1407,7 @@
                     Bid Lead <span class="asterisk">* </span>
                 </div>
                 <div class="inputContent">
-                    <input type="text" class="inputTextBox" maxlength="255" id="ppBidLead" readonly="readonly" />
+                    <input type="text" class="inputTextBox" value="Bid Lead" maxlength="255" id="ppBidLead" readonly="readonly" />
                     <input type="button" value="Get User" class="peoplePickerButton" onclick="PeoplePickerBidLead();" />
                 </div>
 				<div class='errorMsg'>
@@ -1973,7 +2041,9 @@
                 </div>
 				<div class='errorMsg'>
 						<span id="errorClientReference" class="errorText" style="color: Red; display: none" />
-					</div>
+                </div>
+            </br>
+                    
                 <div class="firstTestimonals">
 
                     <div class="displayContent">
